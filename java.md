@@ -1,17 +1,27 @@
-To replicate the styling, font, and positioning as you would expect from Documaker when converting a FAP file to a Word document, you can leverage the Apache POI library's capabilities. Below, I will guide you on how to enhance the code to include font styles, sizes, and positioning according to the coordinates specified in the FAP file.
+To create a structured Word document that mimics a letter-like format using a FAP-like file, we will need to refine the approach to include multiple paragraphs and an image (e.g., a logo). The idea is to structure the FAP content in a way that clearly separates different elements, such as paragraphs and images, while maintaining the correct order and formatting in the final Word document.
 
-### Step 1: Understanding the FAP File and Apache POI Capabilities
+### Step 1: Sample FAP File with Two Paragraphs and a Logo
 
-The FAP file contains information such as:
-- **Coordinates**: `(18952,4460,19296,5364)` - These seem to indicate the position of the text block.
-- **Font size and style**: Often implicitly defined within certain parts of the FAP.
-- **Text content**: The actual text that needs to be displayed.
+Let's create a sample FAP file that contains two paragraphs of text and a logo. We will simulate a basic structure to avoid client information while retaining the essence of the format:
 
-Apache POI allows us to set font styles (e.g., bold, italic), font size, and even approximate positioning by using paragraphs and tab stops.
+```plaintext
+H,2400,(0,0),(0,0,26400,20400),SampleLetterFAP
+V,"A123456X","JOHN","Mon Jan 01 10:00:00 2022",".","."
+V,"B654321X","DOE","Mon Jan 01 10:15:00 2022",".","."
+M,TT,(18952,4460,19296,5364),(20011,Bold,14),1,Dear John Doe,
+M,TT,(18952,5386,19296,6418),(20011,Regular,12),2,We are pleased to inform you that your application has been approved.
+M,TT,(18952,6440,19296,6940),(20011,Regular,12),3,Please find the details below regarding your approval and next steps.
+M,TT,(18952,7500,19296,8000),(20011,Regular,12),4,Your contract will commence on February 1, 2022.
+M,O,(19384,9432,19728,9432),(20011,Regular,100),5,logo.png
+M,TT,(18952,8500,19296,9000),(20011,Regular,12),6,If you have any questions, please contact our support team.
+M,TT,(18952,9500,19296,10000),(20011,Bold,14),7,Thank you,
+M,TT,(18952,10500,19296,11000),(20011,Bold,14),8,Your Company Name
+M,E
+```
 
-### Step 2: Enhance the `FapParser` to Extract Formatting Information
+### Step 2: Modify the `FapParser` Class
 
-Let's enhance the `FapParser` to also extract font size and style from the FAP lines.
+The `FapParser` class needs to handle both text and image elements, including their respective details:
 
 ```java
 package com.example.fapwordconverter;
@@ -28,21 +38,31 @@ public class FapParser {
         for (String line : lines) {
             if (line.startsWith("M,TT")) {
                 elements.add(parseTextElement(line));
+            } else if (line.startsWith("M,O")) {
+                elements.add(parseImageElement(line));
             }
-            // Add more parsing rules here if necessary
         }
 
         return elements;
     }
 
     private FapElement parseTextElement(String line) {
-        String[] parts = line.split(",", 7); // Split with 7 parts to capture font size/coordinates correctly
+        String[] parts = line.split(",", 7); // Split into 7 parts
         String coordinates = parts[2];
         String fontDetails = parts[3];
         int fontSize = Integer.parseInt(parts[4].trim());
         String content = parts[6].trim();
 
         return new FapElement("TEXT", content, coordinates, fontDetails, fontSize);
+    }
+
+    private FapElement parseImageElement(String line) {
+        String[] parts = line.split(",", 6); // Split into 6 parts
+        String coordinates = parts[2];
+        String fontDetails = parts[3];
+        String imagePath = parts[5].trim();
+
+        return new FapElement("IMAGE", imagePath, coordinates, fontDetails, 0);
     }
 
     public static class FapElement {
@@ -83,18 +103,17 @@ public class FapParser {
 }
 ```
 
-### Step 3: Enhance the `WordGenerator` to Apply Styles and Positioning
+### Step 3: Enhance the `WordGenerator` Class
 
-Now let's modify the `WordGenerator` class to apply these styles using Apache POI.
+This class will need to handle both text and image elements, applying the appropriate styling and adding the logo image to the document.
 
 ```java
 package com.example.fapwordconverter;
 
-import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.apache.poi.xwpf.usermodel.XWPFParagraph;
-import org.apache.poi.xwpf.usermodel.XWPFRun;
+import org.apache.poi.xwpf.usermodel.*;
+import org.apache.poi.util.Units;
 
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -107,8 +126,9 @@ public class WordGenerator {
             for (FapParser.FapElement element : elements) {
                 if (element.getType().equals("TEXT")) {
                     addText(doc, element);
+                } else if (element.getType().equals("IMAGE")) {
+                    addImage(doc, element);
                 }
-                // Handle other element types here
             }
 
             try (FileOutputStream out = new FileOutputStream(outputPath.toFile())) {
@@ -123,35 +143,37 @@ public class WordGenerator {
 
         XWPFRun run = paragraph.createRun();
         run.setText(element.getContent());
-        run.setFontSize(getFontSize(element.getFontSize()));  // Set the font size
-        setFontStyle(run, element.getFontDetails());  // Set font styles based on the parsed FAP data
-
-        // Set additional styles such as bold, italic, underline based on content, or FAP specifics
-        // If content includes <b> or <i> tags, you can strip and apply the styles accordingly.
+        run.setFontSize(getFontSize(element.getFontSize()));
+        setFontStyle(run, element.getFontDetails());
     }
 
     private int getFontSize(int fapFontSize) {
-        // Assuming fapFontSize is in some unit, convert it to points
-        // This conversion is arbitrary; adjust according to your needs
-        return Math.max(fapFontSize / 2, 10);  // Example conversion
+        return Math.max(fapFontSize / 2, 10);  // Convert to a reasonable point size
     }
 
     private void setFontStyle(XWPFRun run, String fontDetails) {
-        // Parse fontDetails and apply styles
         if (fontDetails.contains("Bold")) {
             run.setBold(true);
         }
         if (fontDetails.contains("Italic")) {
             run.setItalic(true);
         }
-        // You can add more conditions based on how fontDetails is structured
+    }
+
+    private void addImage(XWPFDocument doc, FapParser.FapElement element) throws IOException {
+        XWPFParagraph paragraph = doc.createParagraph();
+        XWPFRun run = paragraph.createRun();
+
+        try (FileInputStream is = new FileInputStream(element.getContent())) {
+            run.addPicture(is, Document.PICTURE_TYPE_PNG, element.getContent(), Units.toEMU(100), Units.toEMU(50)); // Adjust size as needed
+        }
     }
 }
 ```
 
 ### Step 4: Main Application (`Main.java`)
 
-Finally, let's update the main entry point of your application to handle the processing and output.
+The main application remains largely unchanged but ensures that it correctly processes both text and image elements.
 
 ```java
 package com.example.fapwordconverter;
@@ -188,32 +210,42 @@ public class Main {
 }
 ```
 
-### Step 5: Sample FAP File Content
+### Step 5: Prepare the Environment
 
-Here's a sample `sample.fap` content considering some additional attributes:
+1. **Create Directories**:
+   - Ensure you have an `input` directory in the project root.
+   - Ensure you have an `output` directory in the project root.
 
-```plaintext
-H,2400,(0,0),(0,0,26400,20400),A01L2XX
-V,"A123456X","JOHN","Wed Jan 01 12:00:00 2020",".","."
-V,"A654321X","DOE","Wed Jan 01 12:10:00 2020",".","."
-M,TT,(18952,4460,19296,5364),(20011,Bold,Italic,12),5,upon
-M,TT,(18952,5386,19296,6418),(20011,Regular,14),6,which
-M,TT,(18952,6440,19296,6940),(20011,Bold,14),4,all
-M,O,(19384,9432,19728,9432),(20011,Regular,40),40,after the Contract has been terminated.
-M,TT,(20248,14150,20592,14152),(20011,Italic,12),75,Endorsement effective date (if different from Issue Date of the Contract):
-M,E
-```
+2. **Add `sample.fap`**:
+   - Place the `sample.fap` file inside the `input` directory.
+
+3. **Add an Image**:
+   - Place an image file named `logo.png` inside the `input` directory or any other accessible location. Ensure the `sample.fap` file references this path correctly.
 
 ### Step 6: Run the Application
 
-- **Build the Project**: Use **Build > Build Project**.
-- **Run**: Right-click on `Main.java` and select **Run 'Main.main()'**.
-- **Check Output**: The generated Word document should now include text with the appropriate styles and font sizes.
+1. **Build the Project**:
+   - Use **Build > Build Project** in IntelliJ IDEA.
 
-### Final Notes:
+2. **Run the Application**:
+   - Run `Main.java` as a Java application.
 
-- **Positioning**: Absolute positioning like coordinates cannot be fully represented with Apache POI, but using paragraphs, tabs, and alignment, you can approximate it. You could simulate a grid system based on the coordinates provided if needed.
-- **Complex Formatting**: For more advanced document structures (e.g., images, tables, etc.), you would need to extend the `FapParser` and `WordGenerator` accordingly.
-- **Scaling**: Consider implementing additional error handling and logging as needed for production environments.
+3. **Check Output**:
+   - A new `sample.docx` should be generated in the `output` directory. Open it to verify that it contains the formatted paragraphs and the logo.
 
-This Java application should now more closely mimic the output you would expect from Documaker by considering font styles, sizes, and positioning as defined in the FAP file.
+### Expected Output
+
+- **Two Paragraphs**:
+  - The Word document should have two paragraphs, with appropriate text formatting (e.g., bold, regular).
+- **Logo**:
+  - The document should include the logo image at the specified position.
+
+### Troubleshooting and Notes:
+
+- **Font and Position**: Apache POI doesn't fully support absolute positioning as in GUI tools like Documaker, so position elements as closely as possible using paragraphs and alignments.
+- **Images**: Ensure your images are correctly referenced and exist at the specified location. Adjust image sizes as necessary.
+- **Scaling**: For complex documents,
+
+ consider adding more advanced formatting rules or integrating this with a more comprehensive document creation tool.
+
+This setup provides a basic structure for converting FAP-like content into a Word document while respecting text formatting and including images like logos.
