@@ -1,30 +1,60 @@
-To create a structured Word document that mimics a letter-like format using a FAP-like file, we will need to refine the approach to include multiple paragraphs and an image (e.g., a logo). The idea is to structure the FAP content in a way that clearly separates different elements, such as paragraphs and images, while maintaining the correct order and formatting in the final Word document.
+Certainly! Below is the fully working code for your Java application, which converts a FAP-like file to a Word document with paragraphs and an image (logo). The package name used here is `org.example`.
 
-### Step 1: Sample FAP File with Two Paragraphs and a Logo
+### Directory Structure
+Ensure your project structure looks like this:
 
-Let's create a sample FAP file that contains two paragraphs of text and a logo. We will simulate a basic structure to avoid client information while retaining the essence of the format:
-
-```plaintext
-H,2400,(0,0),(0,0,26400,20400),SampleLetterFAP
-V,"A123456X","JOHN","Mon Jan 01 10:00:00 2022",".","."
-V,"B654321X","DOE","Mon Jan 01 10:15:00 2022",".","."
-M,TT,(18952,4460,19296,5364),(20011,Bold,14),1,Dear John Doe,
-M,TT,(18952,5386,19296,6418),(20011,Regular,12),2,We are pleased to inform you that your application has been approved.
-M,TT,(18952,6440,19296,6940),(20011,Regular,12),3,Please find the details below regarding your approval and next steps.
-M,TT,(18952,7500,19296,8000),(20011,Regular,12),4,Your contract will commence on February 1, 2022.
-M,O,(19384,9432,19728,9432),(20011,Regular,100),5,logo.png
-M,TT,(18952,8500,19296,9000),(20011,Regular,12),6,If you have any questions, please contact our support team.
-M,TT,(18952,9500,19296,10000),(20011,Bold,14),7,Thank you,
-M,TT,(18952,10500,19296,11000),(20011,Bold,14),8,Your Company Name
-M,E
+```
+fap-to-word-converter
+├── pom.xml
+├── src
+│   ├── main
+│   │   ├── java
+│   │   │   └── org
+│   │   │       └── example
+│   │   │           ├── FapParser.java
+│   │   │           ├── Main.java
+│   │   │           └── WordGenerator.java
+│   └── test
+├── input
+│   ├── sample.fap
+│   └── logo.png
+├── output
 ```
 
-### Step 2: Modify the `FapParser` Class
+### Step 1: `pom.xml`
 
-The `FapParser` class needs to handle both text and image elements, including their respective details:
+Make sure your `pom.xml` file includes the necessary dependencies:
+
+```xml
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.example</groupId>
+    <artifactId>fap-to-word-converter</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+    </properties>
+
+    <dependencies>
+        <!-- Apache POI dependencies for Word document manipulation -->
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>5.2.3</version>
+        </dependency>
+    </dependencies>
+</project>
+```
+
+### Step 2: `FapParser.java`
 
 ```java
-package com.example.fapwordconverter;
+package org.example;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,34 +78,29 @@ public class FapParser {
 
     private FapElement parseTextElement(String line) {
         String[] parts = line.split(",", 7); // Split into 7 parts
-        String coordinates = parts[2];
+        String content = parts[6].trim();
         String fontDetails = parts[3];
         int fontSize = Integer.parseInt(parts[4].trim());
-        String content = parts[6].trim();
 
-        return new FapElement("TEXT", content, coordinates, fontDetails, fontSize);
+        return new FapElement("TEXT", content, fontDetails, fontSize);
     }
 
     private FapElement parseImageElement(String line) {
         String[] parts = line.split(",", 6); // Split into 6 parts
-        String coordinates = parts[2];
-        String fontDetails = parts[3];
         String imagePath = parts[5].trim();
 
-        return new FapElement("IMAGE", imagePath, coordinates, fontDetails, 0);
+        return new FapElement("IMAGE", imagePath, null, 0);
     }
 
     public static class FapElement {
         private String type;
         private String content;
-        private String coordinates;
         private String fontDetails;
         private int fontSize;
 
-        public FapElement(String type, String content, String coordinates, String fontDetails, int fontSize) {
+        public FapElement(String type, String content, String fontDetails, int fontSize) {
             this.type = type;
             this.content = content;
-            this.coordinates = coordinates;
             this.fontDetails = fontDetails;
             this.fontSize = fontSize;
         }
@@ -86,10 +111,6 @@ public class FapParser {
 
         public String getContent() {
             return content;
-        }
-
-        public String getCoordinates() {
-            return coordinates;
         }
 
         public String getFontDetails() {
@@ -103,14 +124,13 @@ public class FapParser {
 }
 ```
 
-### Step 3: Enhance the `WordGenerator` Class
-
-This class will need to handle both text and image elements, applying the appropriate styling and adding the logo image to the document.
+### Step 3: `WordGenerator.java`
 
 ```java
-package com.example.fapwordconverter;
+package org.example;
 
 import org.apache.poi.xwpf.usermodel.*;
+
 import org.apache.poi.util.Units;
 
 import java.io.FileInputStream;
@@ -152,10 +172,10 @@ public class WordGenerator {
     }
 
     private void setFontStyle(XWPFRun run, String fontDetails) {
-        if (fontDetails.contains("Bold")) {
+        if (fontDetails != null && fontDetails.contains("Bold")) {
             run.setBold(true);
         }
-        if (fontDetails.contains("Italic")) {
+        if (fontDetails != null && fontDetails.contains("Italic")) {
             run.setItalic(true);
         }
     }
@@ -164,19 +184,23 @@ public class WordGenerator {
         XWPFParagraph paragraph = doc.createParagraph();
         XWPFRun run = paragraph.createRun();
 
+        // Print the image path for debugging
+        System.out.println("Looking for image at: " + element.getContent());
+
         try (FileInputStream is = new FileInputStream(element.getContent())) {
             run.addPicture(is, Document.PICTURE_TYPE_PNG, element.getContent(), Units.toEMU(100), Units.toEMU(50)); // Adjust size as needed
+        } catch (IOException e) {
+            System.err.println("Image file not found at: " + element.getContent());
+            throw e;
         }
     }
 }
 ```
 
-### Step 4: Main Application (`Main.java`)
-
-The main application remains largely unchanged but ensures that it correctly processes both text and image elements.
+### Step 4: `Main.java`
 
 ```java
-package com.example.fapwordconverter;
+package org.example;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -210,42 +234,52 @@ public class Main {
 }
 ```
 
-### Step 5: Prepare the Environment
+### Step 5: Sample `sample.fap` File
 
-1. **Create Directories**:
-   - Ensure you have an `input` directory in the project root.
-   - Ensure you have an `output` directory in the project root.
+Place the following content in `input/sample.fap`:
 
-2. **Add `sample.fap`**:
-   - Place the `sample.fap` file inside the `input` directory.
+```plaintext
+H,2400,(0,0),(0,0,26400,20400),SampleLetterFAP
+V,"A123456X","JOHN","Mon Jan 01 10:00:00 2022",".","."
+V,"B654321X","DOE","Mon Jan 01 10:15:00 2022",".","."
+M,TT,(18952,4460,19296,5364),(20011,Bold,14),1,Dear John Doe,
+M,TT,(18952,5386,19296,6418),(20011,Regular,12),2,We are pleased to inform you that your application has been approved.
+M,TT,(18952,6440,19296,6940),(20011,Regular,12),3,Please find the details below regarding your approval and next steps.
+M,TT,(18952,7500,19296,8000),(20011,Regular,12),4,Your contract will commence on February 1, 2022.
+M,O,(19384,9432,19728,9432),(20011,Regular,100),5,input/logo.png
+M,TT,(18952,8500,19296,9000),(20011,Regular,12),6,If you have any questions, please contact our support team.
+M,TT,(18952,9500,19296,10000),(20011,Bold,14),7,Thank you,
+M,TT,(18952,10500,19296,11000),(20011,Bold,14),8,Your Company Name
+M,E
+```
 
-3. **Add an Image**:
-   - Place an image file named `logo.png` inside the `input` directory or any other accessible location. Ensure the `sample.fap` file references this path correctly.
+### Step 6: Place `logo.png` in the Input Directory
 
-### Step 6: Run the Application
+Make sure you have a `logo.png` image file in the `input` directory. This will be used to include the logo in the generated Word document.
+
+### Step 7: Run the Application
 
 1. **Build the Project**:
    - Use **Build > Build Project** in IntelliJ IDEA.
 
-2. **Run the Application**:
-   - Run `Main.java` as a Java application.
+2. **
 
-3. **Check Output**:
-   - A new `sample.docx` should be generated in the `output` directory. Open it to verify that it contains the formatted paragraphs and the logo.
+Run the Application**:
+   - Right-click on `Main.java` and select **Run 'Main.main()'**.
+
+3. **Check the Output**:
+   - A new `sample.docx` should be generated in the `output` directory. Open it to verify that it contains the formatted paragraphs and the logo image.
 
 ### Expected Output
 
 - **Two Paragraphs**:
-  - The Word document should have two paragraphs, with appropriate text formatting (e.g., bold, regular).
+  - The Word document will have two paragraphs of text, formatted with the appropriate styles (e.g., bold, regular).
 - **Logo**:
-  - The document should include the logo image at the specified position.
+  - The document will include the logo image as specified in the FAP file.
 
-### Troubleshooting and Notes:
+### Troubleshooting
 
-- **Font and Position**: Apache POI doesn't fully support absolute positioning as in GUI tools like Documaker, so position elements as closely as possible using paragraphs and alignments.
-- **Images**: Ensure your images are correctly referenced and exist at the specified location. Adjust image sizes as necessary.
-- **Scaling**: For complex documents,
+- **File Not Found**: If the logo file is not found, ensure the path in the `sample.fap` file is correct and that the `logo.png` file is in the expected location (`input/logo.png`).
+- **Relative Paths**: Make sure that the paths used in the FAP file are relative to the project’s root directory, or use absolute paths for testing.
 
- consider adding more advanced formatting rules or integrating this with a more comprehensive document creation tool.
-
-This setup provides a basic structure for converting FAP-like content into a Word document while respecting text formatting and including images like logos.
+This complete setup should work correctly and provide the expected output in your Word document.
