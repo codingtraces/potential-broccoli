@@ -1,29 +1,16 @@
-Certainly! Below is the fully working code for your Java application, which converts a FAP-like file to a Word document with paragraphs and an image (logo). The package name used here is `org.example`.
+Sure! Let’s create a Java program that correctly parses a FAP-like file and generates a Word document while maintaining correct font sizes, paragraph formatting, and other properties.
 
-### Directory Structure
-Ensure your project structure looks like this:
+### Step 1: Understanding the Font Size Issue
 
-```
-fap-to-word-converter
-├── pom.xml
-├── src
-│   ├── main
-│   │   ├── java
-│   │   │   └── org
-│   │   │       └── example
-│   │   │           ├── FapParser.java
-│   │   │           ├── Main.java
-│   │   │           └── WordGenerator.java
-│   └── test
-├── input
-│   ├── sample.fap
-│   └── logo.png
-├── output
-```
+The issue with extremely large font sizes likely stems from incorrect scaling or interpreting the FAP font size inappropriately. We'll set up a more logical scaling approach, assuming the FAP file uses reasonable font size units (e.g., `12` for 12pt font size).
 
-### Step 1: `pom.xml`
+### Step 2: Code Implementation
 
-Make sure your `pom.xml` file includes the necessary dependencies:
+Here’s the full code without image handling, focusing on generating properly formatted paragraphs with correct font sizes:
+
+#### 1. `pom.xml`
+
+Ensure you have the correct dependencies in your `pom.xml`:
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -51,7 +38,9 @@ Make sure your `pom.xml` file includes the necessary dependencies:
 </project>
 ```
 
-### Step 2: `FapParser.java`
+#### 2. `FapParser.java`
+
+This class handles parsing the FAP file, extracting text content, font size, and style:
 
 ```java
 package org.example;
@@ -68,8 +57,6 @@ public class FapParser {
         for (String line : lines) {
             if (line.startsWith("M,TT")) {
                 elements.add(parseTextElement(line));
-            } else if (line.startsWith("M,O")) {
-                elements.add(parseImageElement(line));
             }
         }
 
@@ -78,25 +65,18 @@ public class FapParser {
 
     private FapElement parseTextElement(String line) {
         String[] parts = line.split(",", 7); // Split into 7 parts
-        String content = parts[6].trim();
-        String fontDetails = parts[3];
-        int fontSize = Integer.parseInt(parts[4].trim());
+        String content = parts[6].trim(); // The text content
+        String fontDetails = parts[3]; // Font details and positioning
+        int fontSize = Integer.parseInt(parts[4].trim()); // Extract the font size
 
         return new FapElement("TEXT", content, fontDetails, fontSize);
     }
 
-    private FapElement parseImageElement(String line) {
-        String[] parts = line.split(",", 6); // Split into 6 parts
-        String imagePath = parts[5].trim();
-
-        return new FapElement("IMAGE", imagePath, null, 0);
-    }
-
     public static class FapElement {
-        private String type;
-        private String content;
-        private String fontDetails;
-        private int fontSize;
+        private final String type;
+        private final String content;
+        private final String fontDetails;
+        private final int fontSize;
 
         public FapElement(String type, String content, String fontDetails, int fontSize) {
             this.type = type;
@@ -124,16 +104,18 @@ public class FapParser {
 }
 ```
 
-### Step 3: `WordGenerator.java`
+#### 3. `WordGenerator.java`
+
+This class generates the Word document, handling text with proper formatting:
 
 ```java
 package org.example;
 
-import org.apache.poi.xwpf.usermodel.*;
+import org.apache.poi.xwpf.usermodel.ParagraphAlignment;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFRun;
 
-import org.apache.poi.util.Units;
-
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -146,8 +128,6 @@ public class WordGenerator {
             for (FapParser.FapElement element : elements) {
                 if (element.getType().equals("TEXT")) {
                     addText(doc, element);
-                } else if (element.getType().equals("IMAGE")) {
-                    addImage(doc, element);
                 }
             }
 
@@ -168,7 +148,8 @@ public class WordGenerator {
     }
 
     private int getFontSize(int fapFontSize) {
-        return Math.max(fapFontSize / 2, 10);  // Convert to a reasonable point size
+        // Assuming FAP font size directly correlates to points for simplicity
+        return fapFontSize; // No unnecessary conversion
     }
 
     private void setFontStyle(XWPFRun run, String fontDetails) {
@@ -178,26 +159,14 @@ public class WordGenerator {
         if (fontDetails != null && fontDetails.contains("Italic")) {
             run.setItalic(true);
         }
-    }
-
-    private void addImage(XWPFDocument doc, FapParser.FapElement element) throws IOException {
-        XWPFParagraph paragraph = doc.createParagraph();
-        XWPFRun run = paragraph.createRun();
-
-        // Print the image path for debugging
-        System.out.println("Looking for image at: " + element.getContent());
-
-        try (FileInputStream is = new FileInputStream(element.getContent())) {
-            run.addPicture(is, Document.PICTURE_TYPE_PNG, element.getContent(), Units.toEMU(100), Units.toEMU(50)); // Adjust size as needed
-        } catch (IOException e) {
-            System.err.println("Image file not found at: " + element.getContent());
-            throw e;
-        }
+        // Additional styles can be added as needed
     }
 }
 ```
 
-### Step 4: `Main.java`
+#### 4. `Main.java`
+
+The main class ties everything together:
 
 ```java
 package org.example;
@@ -234,9 +203,9 @@ public class Main {
 }
 ```
 
-### Step 5: Sample `sample.fap` File
+### Step 3: Sample `sample.fap` File
 
-Place the following content in `input/sample.fap`:
+Place this content in your `input/sample.fap` file:
 
 ```plaintext
 H,2400,(0,0),(0,0,26400,20400),SampleLetterFAP
@@ -246,40 +215,32 @@ M,TT,(18952,4460,19296,5364),(20011,Bold,14),1,Dear John Doe,
 M,TT,(18952,5386,19296,6418),(20011,Regular,12),2,We are pleased to inform you that your application has been approved.
 M,TT,(18952,6440,19296,6940),(20011,Regular,12),3,Please find the details below regarding your approval and next steps.
 M,TT,(18952,7500,19296,8000),(20011,Regular,12),4,Your contract will commence on February 1, 2022.
-M,O,(19384,9432,19728,9432),(20011,Regular,100),5,input/logo.png
-M,TT,(18952,8500,19296,9000),(20011,Regular,12),6,If you have any questions, please contact our support team.
-M,TT,(18952,9500,19296,10000),(20011,Bold,14),7,Thank you,
-M,TT,(18952,10500,19296,11000),(20011,Bold,14),8,Your Company Name
+M,TT,(18952,8500,19296,9000),(20011,Regular,12),5,If you have any questions, please contact our support team.
+M,TT,(18952,9500,19296,10000),(20011,Bold,14),6,Thank you,
+M,TT,(18952,10500,19296,11000),(20011,Bold,14),7,Your Company Name
 M,E
 ```
 
-### Step 6: Place `logo.png` in the Input Directory
-
-Make sure you have a `logo.png` image file in the `input` directory. This will be used to include the logo in the generated Word document.
-
-### Step 7: Run the Application
+### Step 4: Run the Application
 
 1. **Build the Project**:
-   - Use **Build > Build Project** in IntelliJ IDEA.
+   - In IntelliJ IDEA, go to **Build > Build Project**.
 
-2. **
-
-Run the Application**:
-   - Right-click on `Main.java` and select **Run 'Main.main()'**.
+2. **Run the Application**:
+   - Run `Main.java` as a Java application.
 
 3. **Check the Output**:
-   - A new `sample.docx` should be generated in the `output` directory. Open it to verify that it contains the formatted paragraphs and the logo image.
+   - A new `sample.docx` should be generated in the `output` directory. Open it to verify that it contains properly formatted paragraphs with correct font sizes.
 
 ### Expected Output
 
-- **Two Paragraphs**:
-  - The Word document will have two paragraphs of text, formatted with the appropriate styles (e.g., bold, regular).
-- **Logo**:
-  - The document will include the logo image as specified in the FAP file.
+- **Paragraphs**: The document should have paragraphs formatted according to the FAP file.
+- **Font Sizes**: Text should be displayed with the appropriate font sizes, like `14pt` for headers and `12pt` for body text.
+- **Styles**: Bold and italic styles should be applied correctly where specified.
 
 ### Troubleshooting
 
-- **File Not Found**: If the logo file is not found, ensure the path in the `sample.fap` file is correct and that the `logo.png` file is in the expected location (`input/logo.png`).
-- **Relative Paths**: Make sure that the paths used in the FAP file are relative to the project’s root directory, or use absolute paths for testing.
+- **Font Size Issues**: If you notice incorrect font sizes, double-check that the FAP file uses reasonable sizes and that the `getFontSize()` method interprets them correctly.
+- **Missing Text**: Ensure the FAP parsing correctly captures all content. The parsing logic should be adapted if your FAP structure changes.
 
-This complete setup should work correctly and provide the expected output in your Word document.
+This solution should address the issues with font sizes and provide a consistent, properly formatted Word document output.
