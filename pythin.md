@@ -1,58 +1,52 @@
-Here is a simple Python script that can automatically convert all `.fap` files in an input folder to `.rtf` files in an output folder using the `pypandoc` library. The script assumes that your `.fap` files contain plain text or are in a format that `pandoc` can handle for conversion.
+Here’s how you should structure your folders and files to use the Python script I provided:
 
-### Prerequisites
+### Folder Structure
 
-1. **Install `pypandoc`** and **`pandoc`**:
-   ```bash
-   pip install pypandoc
-   choco install pandoc
-   ```
-
-### Python Script
-
-Save this script in a file named `convert_fap_to_rtf.py` inside your `code` folder.
-
-```python
-import os
-import pypandoc
-
-def convert_fap_files(input_folder, output_folder):
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
-
-    for filename in os.listdir(input_folder):
-        if filename.endswith('.fap'):
-            input_file = os.path.join(input_folder, filename)
-            output_file = os.path.join(output_folder, f'{os.path.splitext(filename)[0]}.rtf')
-            try:
-                pypandoc.convert_file(input_file, 'rtf', outputfile=output_file)
-                print(f"Successfully converted {filename} to {output_file}")
-            except Exception as e:
-                print(f"Failed to convert {filename}: {e}")
-
-if __name__ == "__main__":
-    input_folder = os.path.join(os.path.dirname(__file__), 'input')
-    output_folder = os.path.join(os.path.dirname(__file__), 'output')
-    convert_fap_files(input_folder, output_folder)
+```plaintext
+your_project_directory/
+│
+├── code/
+│   └── convert_fap_to_rtf.py  # The Python script
+│
+├── input/
+│   ├── file1.fap              # Your .fap files go here
+│   ├── file2.fap
+│   └── ...                    # Add more .fap files as needed
+│
+└── output/
+    └── (this folder will be created automatically by the script if it doesn't exist)
 ```
 
-### How to Use the Script
+### Steps to Set Up
 
-1. **Directory Structure**:
-   - `code/` (where the script is located)
-   - `input/` (where your `.fap` files are located)
-   - `output/` (where the converted `.rtf` files will be saved)
+1. **Create the Main Project Directory**: Name it whatever you like, e.g., `fap_to_rtf_converter`.
 
-2. **Running the Script**:
-   - Navigate to the `code` folder in your terminal or command prompt.
-   - Run the script with Python:
+2. **Create a `code` Folder**: Inside your project directory, create a folder named `code`. This is where your Python script will reside.
+
+3. **Create an `input` Folder**: Inside your project directory, create a folder named `input`. This is where you will place all your `.fap` files that need to be converted.
+
+4. **Create an `output` Folder** (Optional): You can create an `output` folder inside your project directory where the converted `.rtf` files will be saved. If you don’t create this folder, the script will create it for you.
+
+5. **Place the Python Script in the `code` Folder**: Save the Python script (`convert_fap_to_rtf.py`) inside the `code` folder.
+
+### Running the Script
+
+1. **Navigate to the `code` Folder**:
+   - Open a terminal or command prompt.
+   - Navigate to the `code` directory inside your project:
+     ```bash
+     cd /path/to/your_project_directory/code
+     ```
+
+2. **Run the Script**:
+   - Run the script using Python:
      ```bash
      python convert_fap_to_rtf.py
      ```
 
-### What the Script Does:
-- **Iterates over all `.fap` files** in the `input` folder.
-- **Converts** each `.fap` file to `.rtf` using `pypandoc`.
-- **Saves** the converted `.rtf` files in the `output` folder with the same base filename as the original `.fap` file.
+### After Running the Script
 
-This script provides a simple and efficient way to batch convert your FAP files to RTF without needing to write additional logic.
+- The script will process all `.fap` files in the `input` folder and save the converted `.rtf` files in the `output` folder.
+- If the `output` folder doesn’t exist, the script will create it automatically.
+
+This folder structure keeps everything organized and makes it easy to manage the conversion process.
