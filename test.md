@@ -1,3 +1,14 @@
+Given your updated folder structure, where:
+
+- The PowerShell script (`Split-PDF.ps1`) is located in `C:\Users\denny\Dev\zCompany\Jackson\05SourceCode\pdkt2`.
+- The `input.pdf` and `page-count.csv` are located in `C:\Users\denny\Dev\zCompany\Jackson\05SourceCode\pdkt`.
+- You want the output PDFs to be saved in the same folder as `input.pdf` and `page-count.csv`.
+
+Here’s the updated script:
+
+### Updated PowerShell Script (`Split-PDF.ps1`)
+
+```powershell
 # Define the input folder path where input.pdf and page-count.csv are located
 $inputFolderPath = "C:\Users\denny\Dev\zCompany\Jackson\05SourceCode\pdkt"
 
@@ -41,3 +52,34 @@ Get-Content -Path $pageCountFilePath | Select-Object -Skip 1 | ForEach-Object {
 }
 
 Write-Host "PDF splitting completed. Files are saved in $inputFolderPath"
+```
+
+### Explanation:
+
+1. **Input Folder Path**: 
+   - The script is configured to read the `input.pdf` and `page-count.csv` from the `C:\Users\denny\Dev\zCompany\Jackson\05SourceCode\pdkt` folder.
+
+2. **Output Location**:
+   - The script saves the split PDF files in the same folder as the `input.pdf` (`C:\Users\denny\Dev\zCompany\Jackson\05SourceCode\pdkt`).
+
+3. **FileName Handling**:
+   - The script extracts the file name from the CSV and ensures that the output files are generated in the same input folder by joining the input folder path with the file name extracted from the CSV.
+
+### Steps to Run:
+
+1. **Place the Script**: Ensure that the `Split-PDF.ps1` script is saved in `C:\Users\denny\Dev\zCompany\Jackson\05SourceCode\pdkt2`.
+
+2. **Run the Script**:
+   - Open PowerShell, navigate to the `pdkt2` folder:
+     ```powershell
+     cd C:\Users\denny\Dev\zCompany\Jackson\05SourceCode\pdkt2
+     ```
+   - Run the script:
+     ```powershell
+     .\Split-PDF.ps1
+     ```
+
+3. **Check Output**: 
+   - After running the script, the split PDF files should be saved in `C:\Users\denny\Dev\zCompany\Jackson\05SourceCode\pdkt`.
+
+This setup should now meet your requirements by placing the split PDF files in the same folder as the `input.pdf` and `page-count.csv`.
