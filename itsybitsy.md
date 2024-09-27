@@ -1,115 +1,46 @@
-# Assignment 1: PDF Splitter Using pdftk and PowerShell
+Certainly! Here's the complete documentation, including the installation commands for `pdftk` and the detailed instructions for setting up and running the PDF splitting process.
 
-This project provides a PowerShell script to split a PDF file into multiple parts based on page counts specified in a CSV file. The script uses `pdftk` (PDF Toolkit) to perform the splitting.
+---
+
+# PDF Splitting Using PowerShell and `pdftk`
+
+This documentation provides a step-by-step guide to splitting a PDF file (`input.pdf`) into multiple smaller files based on a CSV file (`page-count.csv`). The process uses a PowerShell script and `pdftk` (PDF Toolkit).
 
 ## Table of Contents
 - [Prerequisites](#prerequisites)
 - [Folder Structure](#folder-structure)
-- [Step 1: Setting Up the Environment](#step-1-setting-up-the-environment)
+- [Step 1: Installing PDFTK](#step-1-installing-pdftk)
 - [Step 2: Preparing the CSV File](#step-2-preparing-the-csv-file)
 - [Step 3: Writing the PowerShell Script](#step-3-writing-the-powershell-script)
-- [Step 4: Installing PDFTK](#step-4-installing-pdftk)
-- [Step 5: Running the PowerShell Script](#step-5-running-the-powershell-script)
-- [Step 6: Verifying the Output](#step-6-verifying-the-output)
+- [Step 4: Running the Script](#step-4-running-the-script)
+- [Step 5: Verifying the Output](#step-5-verifying-the-output)
+
+---
 
 ## Prerequisites
-- Windows OS
-- PowerShell
-- `pdftk` (PDF Toolkit)
-- Chocolatey (for easy installation of `pdftk`)
+
+- **Windows Operating System**
+- **PowerShell**
+- **PDFTK (PDF Toolkit)**: Ensure `pdftk` is installed and added to your system's PATH.
 
 ## Folder Structure
 
-Ensure that your project folder is structured as follows:
+The files should be organized as follows:
 
 ```
-J:\Denny_01_source_code\_05_split_pdf\pdftk
-├── input.pdf               # Your input PDF file
-├── page-count.csv          # CSV file specifying the split details
-├── Split-PDF.ps1           # PowerShell script for splitting the PDF
-└── output\                 # Folder where split PDF files will be saved
+C:\Users\denny\Dev\zCompany\Jackson\05SourceCode\pdkt\
+│
+├── input.pdf          # The PDF file to be split
+├── page-count.csv     # The CSV file with split instructions
+└── Split-PDF.ps1      # The PowerShell script to perform the split
 ```
 
-## Step 1: Setting Up the Environment
+## Step 1: Installing PDFTK
 
-1. **Navigate to the base folder:**
-   
-   ```
-   J:\Denny_01_source_code\_05_split_pdf\pdftk
-   ```
-
-2. **Create the necessary files and folders as described in the folder structure section.**
-
-## Step 2: Preparing the CSV File
-
-Create the `page-count.csv` file in the `pdftk` folder with the following content:
-
-```plaintext
-FileName,PageCount
-input.pdf,2
-input.pdf,3
-input.pdf,4
-input.pdf,4
-input.pdf,2
-```
-
-This CSV file specifies how the PDF should be split. Each row represents a split, with the number of pages to include in each split.
-
-## Step 3: Writing the PowerShell Script
-
-Create a PowerShell script `Split-PDF.ps1` in the `pdftk` folder with the following content:
-
-```powershell
-# Define the base folder path
-$baseFolderPath = "J:\\Denny_01_source_code\\_05_split_pdf\\pdftk"
-
-# Define paths to input PDF, CSV file, and output folder
-$inputPdfPath = Join-Path -Path $baseFolderPath -ChildPath "input.pdf"
-$pageCountFilePath = Join-Path -Path $baseFolderPath -ChildPath "page-count.csv"
-$outputFolderPath = Join-Path -Path $baseFolderPath -ChildPath "output"
-
-# Create the output folder if it doesn't exist
-if (-Not (Test-Path $outputFolderPath)) {
-    New-Item -Path $outputFolderPath -ItemType Directory
-}
-
-# Read the page counts from the CSV file
-$pageCounts = Import-Csv -Path $pageCountFilePath
-
-# Initialize the starting page
-$startPage = 1
-$splitCounter = 1
-
-# Loop through each entry in the page count file
-foreach ($entry in $pageCounts) {
-    $pageCount = [int]$entry.PageCount
-
-    # Define the output file name
-    $outputFileName = "split_part_$splitCounter.pdf"
-    $outputFilePath = Join-Path -Path $outputFolderPath -ChildPath $outputFileName
-
-    # Calculate the end page for this split
-    $endPage = $startPage + $pageCount - 1
-
-    # Run pdftk to split the PDF
-    $cmd = "pdftk `"$inputPdfPath`" cat $startPage-$endPage output `"$outputFilePath`""
-    Invoke-Expression $cmd
-
-    # Update the starting page for the next split
-    $startPage = $endPage + 1
-    $splitCounter++
-}
-
-Write-Host "PDF splitting completed. Files are saved in $outputFolderPath"
-```
-
-This script reads the `page-count.csv` file and splits the `input.pdf` according to the specified page ranges.
-
-## Step 4: Installing PDFTK
-
-PDFTK is required to perform the actual PDF splitting. You can install it using Chocolatey, a package manager for Windows.
+To use `pdftk` for splitting PDFs, you need to install it on your system. You can do this using Chocolatey, a package manager for Windows.
 
 1. **Install Chocolatey** (if not already installed):
+
    Open PowerShell as Administrator and run:
 
    ```powershell
@@ -117,53 +48,92 @@ PDFTK is required to perform the actual PDF splitting. You can install it using 
    ```
 
 2. **Install PDFTK**:
-   Once Chocolatey is installed, run the following command to install PDFTK:
+
+   Once Chocolatey is installed, run the following command to install `pdftk`:
 
    ```powershell
    choco install pdftk
    ```
 
-This command installs PDFTK and adds it to your system PATH, making it available for use in any command prompt or PowerShell session.
+This command installs `pdftk` and adds it to your system PATH, making it available for use in any command prompt or PowerShell session.
 
-## Step 5: Running the PowerShell Script
+## Step 2: Preparing the CSV File
 
-1. **Open PowerShell:**
-   Navigate to the `pdkt` directory:
+The `page-count.csv` file should be formatted as follows:
 
-   ```powershell
-   cd "J:\\Denny_01_source_code\\_05_split_pdf\\pdftk"
-   ```
+```plaintext
+FileName                                                                                  PageCount
+C:\Users\denny\Dev\zCompany\Jackson\05SourceCode\pdkt\doc1.pdf                            1
+C:\Users\denny\Dev\zCompany\Jackson\05SourceCode\pdkt\doc2.pdf                            9
+```
 
-2. **Run the script:**
+- **FileName**: The full path where each split PDF file will be saved.
+- **PageCount**: The number of pages each resulting PDF should contain.
 
-   ```powershell
-   .\\Split-PDF.ps1
-   ```
+Ensure that the CSV file has a header row (`FileName` and `PageCount`), and each subsequent row specifies the output file and the number of pages for that split.
 
-This command executes the script, which reads the `page-count.csv` file and splits the `input.pdf` file according to the specified page ranges.
+## Step 3: Writing the PowerShell Script
 
-## Step 6: Verifying the Output
+Create a PowerShell script named `Split-PDF.ps1` in the same folder. The script should contain the following code:
 
-1. **Check the `output` folder:**
-   After running the script, navigate to the `output` folder:
+```powershell
+# Define the base folder path
+$baseFolderPath = "C:\Users\denny\Dev\zCompany\Jackson\05SourceCode\pdkt"
 
-   ```
-   J:\\Denny_01_source_code\\_05_split_pdf\\pdftk\\output
-   ```
+# Define the path to the input PDF and the CSV file
+$inputPdfPath = Join-Path -Path $baseFolderPath -ChildPath "input.pdf"
+$pageCountFilePath = Join-Path -Path $baseFolderPath -ChildPath "page-count.csv"
 
-2. **Verify the split PDFs:**
-   You should see the split PDF files named `split_part_1.pdf`, `split_part_2.pdf`, etc., according to the page counts specified in the CSV file.
+# Initialize the starting page
+$startPage = 1
 
-## Conclusion
+# Read the page counts from the CSV file
+Get-Content -Path $pageCountFilePath | Select-Object -Skip 1 | ForEach-Object {
+    $line = $_.Trim()
+    
+    # Split the line into FileName and PageCount based on the last space
+    $lastSpaceIndex = $line.LastIndexOf(' ')
+    $outputFileName = $line.Substring(0, $lastSpaceIndex).Trim()
+    $pageCount = [int]$line.Substring($lastSpaceIndex + 1).Trim()
+    
+    # Calculate the end page for this split
+    $endPage = $startPage + $pageCount - 1
+    
+    # Run pdftk to split the PDF
+    $cmd = "pdftk `"$inputPdfPath`" cat $startPage-$endPage output `"$outputFileName`""
+    Invoke-Expression $cmd
+    
+    # Update the starting page for the next split
+    $startPage = $endPage + 1
+}
 
-This setup allows you to split a PDF file into multiple smaller PDFs based on a page count specified in a CSV file, using `pdftk` and PowerShell. The `Split-PDF.ps1` script automates the process, making it easy to handle large PDF files in a structured and repeatable manner.
+Write-Host "PDF splitting completed. Files are saved in $baseFolderPath"
+```
 
-### Summary:
+## Step 4: Running the Script
 
-1. **Updated the paths** in the `README.md` and the PowerShell script to match the new folder structure: `J:\\Denny_01_source_code\\_05_split_pdf\\pdftk`.
-2. **Ensure the folder structure** is set up as described, with the necessary files in the correct locations.
-3. **Install `pdftk` using Chocolatey** if it's not already installed.
-4. **Run the PowerShell script** to split your PDF according to the specifications in the CSV file.
-5. **Verify the output** in the `output` folder.
+1. **Navigate to the Folder**:
+   - Open PowerShell and navigate to `C:\Users\denny\Dev\zCompany\Jackson\05SourceCode\pdkt`.
 
-This documentation and script should help you manage and execute the PDF splitting process efficiently.
+2. **Run the Script**:
+   - Execute the script by typing:
+     ```powershell
+     .\Split-PDF.ps1
+     ```
+
+## Step 5: Verifying the Output
+
+After running the script:
+
+1. **Check the `pdkt` Folder**:
+   - The split PDF files should be saved in `C:\Users\denny\Dev\zCompany\Jackson\05SourceCode\pdkt`, with file names and page counts matching those specified in the `page-count.csv`.
+
+2. **Review the Output**:
+   - Ensure each PDF contains the correct number of pages as indicated by the `PageCount` in the CSV file.
+
+---
+
+### Conclusion
+
+This guide should help you successfully split a PDF file into multiple smaller files based on a CSV configuration using PowerShell and `pdftk`. If you encounter any issues or need further assistance, feel free to seek additional support.
+
