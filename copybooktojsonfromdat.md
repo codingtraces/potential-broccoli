@@ -1,21 +1,28 @@
-To modify the script and produce a single output JSON file named `bill.json` from the `bill.dat` file, we can adjust the logic slightly so that all parsed records are collected into a single JSON structure. Then, we write this single output JSON file at the end of the process.
+Here’s the complete documentation with code, copybooks, `bill.dat`, and the expected JSON output, all designed to be placed under your folder path `d:/test/code` for easy testing.
 
-### Updated Process:
+### Project Structure
 
-- Read all the `.cpy` files from the `copybooks/` folder.
-- Parse each record in `bill.dat` and store them into a list.
-- At the end of the parsing process, generate a single JSON file called `bill.json` that contains all records in the `data/output/` folder.
+Your folder structure should look like this:
+
+```
+d:/test/
+│
+├── code/
+│   ├── generate_json.py        # Main script for generating JSON from bill.dat using copybooks
+│   ├── copybooks/              # Folder for storing .cpy files
+│   │   ├── bill_header.cpy
+│   │   ├── bill_detail.cpy
+│   │   ├── bill_payment.cpy
+│   │   ├── correspondence_header.cpy
+│   │   └── correspondence_message.cpy
+│   ├── data/                   # Folder for input data and output files
+│   │   ├── bill.dat            # Input data file
+│   │   └── output/             # Folder for storing the generated bill.json
+```
 
 ---
 
-### Step-by-Step Changes:
-
-1. **Parse `bill.dat` as usual** but instead of writing separate JSON files for each record, we will accumulate all parsed records into a list.
-2. **Generate a single JSON file** called `bill.json` that contains all parsed records.
-
----
-
-### Updated Script: `generate_json.py`
+### 1. **Script: `generate_json.py`**
 
 ```python
 import os
@@ -23,8 +30,8 @@ import re
 import json
 
 # Paths to folders
-COPYBOOKS_FOLDER = "../copybooks"
-DATA_FOLDER = "../data"
+COPYBOOKS_FOLDER = r"d:/test/code/copybooks"
+DATA_FOLDER = r"d:/test/code/data"
 OUTPUT_FOLDER = os.path.join(DATA_FOLDER, "output")
 
 # Ensure output directory exists
@@ -126,39 +133,59 @@ if __name__ == "__main__":
 
 ---
 
-### Key Changes
+### 2. **Copybooks:**
 
-1. **Accumulating all parsed records**: The `process_bill_dat()` function now returns a list of parsed records instead of writing each one to a separate file.
-   
-2. **Generating a single output JSON**: At the end of the `main()` function, we write the list of all records to a single JSON file named `bill.json`.
+Place these `.cpy` files in the `d:/test/code/copybooks/` folder.
+
+#### `bill_header.cpy`
+
+```plaintext
+01  BILL-HEADER.
+    05  BILL-ID         PIC 9(8).
+    05  BILL-DATE       PIC 9(8).
+    05  BILL-TYPE       PIC X(1).
+```
+
+#### `bill_detail.cpy`
+
+```plaintext
+01  BILL-DETAIL.
+    05  BILL-AMOUNT     PIC 9(5)V99.
+    05  BILL-DUE-DATE   PIC 9(8).
+    05  ITEM-DESCRIPTION PIC X(20).
+```
+
+#### `bill_payment.cpy`
+
+```plaintext
+01  BILL-PAYMENT.
+    05  PAYMENT-STATUS  PIC 9(1).
+    05  PAYMENT-DATE    PIC 9(8).
+    05  PAYMENT-METHOD  PIC X(10).
+```
+
+#### `correspondence_header.cpy`
+
+```plaintext
+01  CORRESPONDENCE-HEADER.
+    05  SENDER-ID       PIC 9(10).
+    05  RECEIVER-ID     PIC 9(10).
+    05  DATE-SENT       PIC 9(8).
+```
+
+#### `correspondence_message.cpy`
+
+```plaintext
+01  CORRESPONDENCE-MESSAGE.
+    05  SUBJECT         PIC X(30).
+    05  BODY            PIC X(100).
+```
 
 ---
 
-### 2. **Example Folder Setup**
+### 3. **Input File: `bill.dat`**
 
-```
-root-folder/
-│
-├── code/
-│   └── generate_json.py     # Main script to generate JSON from bill.dat using copybooks
-│
-├── copybooks/               # Folder containing all .cpy files
-│   ├── bill_header.cpy
-│   ├── bill_detail.cpy
-│   ├── bill_payment.cpy
-│   ├── correspondence_header.cpy
-│   └── correspondence_message.cpy
-│
-├── data/
-│   ├── bill.dat             # Input data file
-│   └── output/              # Output folder to store the single bill.json file
-```
-
----
-
-### 3. **Sample Input and Output**
-
-#### **Sample `bill.dat` Input**:
+Place the `bill.dat` file in the `d:/test/code/data/` folder.
 
 ```plaintext
 00001234567820210901B
@@ -168,9 +195,13 @@ root-folder/
 0011Meeting Follow-up  Details about the meeting follow-up in the body...
 ```
 
-#### **Expected Output: `bill.json`**:
+This is a sample file with different sections like Bill, Payment, and Correspondence.
 
-This single output JSON file will contain all parsed records from the `bill.dat` file:
+---
+
+### 4. **Expected Output: `bill.json`**
+
+Once you run the script, a `bill.json` file will be generated in `d:/test/code/data/output/`. The expected JSON output will look like this:
 
 ```json
 [
@@ -203,22 +234,22 @@ This single output JSON file will contain all parsed records from the `bill.dat`
 
 ---
 
-### 4. **Running the Script**
+### 5. **Running the Script**
 
-To run the script and generate a single `bill.json` file:
-1. Place all `.cpy` files in the `copybooks/` folder.
-2. Place the `bill.dat` file in the `data/` folder.
-3. Execute the script from the `code` folder:
+To run the script and generate the output JSON, follow these steps:
 
-   ```bash
-   cd code
-   python generate_json.py
-   ```
+1. Ensure that the folder structure and files are set up as described.
+2. Open a command prompt and navigate to the `d:/test/code/` directory.
+3. Run the Python script:
 
-4. The JSON output will be saved as `bill.json` in the `data/output/` folder.
+```bash
+python generate_json.py
+```
+
+4. The `bill.json` file will be generated in the `d:/test/code/data/output/` folder.
 
 ---
 
-### 5. **Conclusion**
+### Conclusion:
 
-This script automates the entire process of reading multiple COBOL copybooks, parsing the `bill.dat` file, and generating a single JSON output named `bill.json` with all parsed records. This approach streamlines the handling of multiple record types and ensures that all relevant data is correctly transformed into JSON format for further processing.
+This complete setup will allow you to run the script and generate the JSON output from the `bill.dat` file using the COBOL copybooks. You can test and modify the setup as needed for your specific requirements.
