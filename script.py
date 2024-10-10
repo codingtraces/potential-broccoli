@@ -27,26 +27,25 @@ def extract_data_from_htm(file_path):
         try:
             with open(file_path, 'r', encoding=encoding) as file:
                 soup = BeautifulSoup(file, 'html.parser')
-                # Log the first 1000 characters to check if reading works
-                logging.info(f"First 1000 characters of {file_path}: {soup.prettify()[:1000]}")
+                logging.info(f"Processing file: {file_path}")
         except Exception as e:
             logging.warning(f"Failed to parse {file_path} with detected encoding {encoding}. Falling back to utf-8.")
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as file:
                 soup = BeautifulSoup(file, 'html.parser')
-                # Log the first 1000 characters to check if reading works with fallback
-                logging.info(f"First 1000 characters of {file_path} (utf-8 fallback): {soup.prettify()[:1000]}")
+                logging.info(f"Processing file with utf-8 fallback: {file_path}")
 
-        # Locate all the <pre> tags that contain the formulas
+        # Locate all <pre> tags that contain formulas and ensure they have relevant "Formula:" text
         formula_sections = soup.find_all('pre')
 
         for formula_tag in formula_sections:
-            # Check if the formula is prefixed by "Formula:" to ensure relevance
+            # Check if the text contains "Formula:" to identify relevant formulas
             if 'Formula:' in formula_tag.text:
                 # Find the nearest preceding <a> tag for the rule identifier
                 previous_a_tag = formula_tag.find_previous('a')
                 if previous_a_tag:
                     rule_title = previous_a_tag.text.strip()  # The rule title from the <a> tag
                     formula_text = formula_tag.get_text().strip()  # Extract the formula text
+                    logging.info(f"Found formula for rule {rule_title}")
                     extracted_data.append((rule_title, formula_text, file_path))
                 else:
                     logging.warning(f"No <a> tag found for formula in {file_path}")
