@@ -32,14 +32,16 @@ def extract_data_from_htm(file_path):
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as file:
                 soup = BeautifulSoup(file, 'html.parser')
 
-        # Find sections in HTML (assuming <h3> for rule titles and <pre> for formulas)
-        sections = soup.find_all('h3')
-        for section in sections:
-            rule_title = section.get_text().strip()
-            formula_tag = section.find_next('pre')  # Assuming formulas are in <pre> tags
-            if formula_tag:
-                formula_text = formula_tag.get_text().strip()
+        # Look for formula sections marked by <pre> tags
+        formula_sections = soup.find_all('pre')
+
+        for formula_tag in formula_sections:
+            # Check if the formula is prefixed by "Formula:" to ensure relevance
+            if 'Formula:' in formula_tag.text:
+                rule_title = formula_tag.find_previous('a').text.strip()  # The rule title is in the previous <a> tag
+                formula_text = formula_tag.get_text().strip()  # Extract the formula text
                 extracted_data.append((rule_title, formula_text, file_path))
+    
     except Exception as e:
         logging.error(f"Error parsing file {file_path}: {e}")
     return extracted_data
