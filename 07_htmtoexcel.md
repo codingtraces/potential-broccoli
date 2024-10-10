@@ -1,8 +1,5 @@
-Here’s a **complete documentation** for your **HTML Formula Extraction to Excel Tool**, including setup, installation instructions, and detailed steps for running the tool.
 
----
-
-# **HTML Formula Extraction to Excel Tool Documentation**
+# **HTML Formula Extraction to Excel Tool with Automatic Encoding Detection**
 
 ## **Table of Contents**
 1. Introduction
@@ -18,13 +15,13 @@ Here’s a **complete documentation** for your **HTML Formula Extraction to Exce
 
 ## **1. Introduction**
 
-The **HTML Formula Extraction to Excel Tool** is a Python script that extracts formulas from static `.htm` reports and writes them into an Excel file while preserving the original multi-line formatting of the formulas. The tool is particularly useful for processing business logic or rule-based reports stored in static HTML files that cannot be directly inspected.
+The **HTML Formula Extraction to Excel Tool** is a Python script that extracts formulas from static `.htm` reports and writes them into an Excel file, while preserving the original multi-line formatting of the formulas. The tool now includes automatic detection of file encoding to handle different character sets that may cause errors in processing.
 
 ### **Key Features:**
+- Automatically detects file encoding.
 - Parses HTML reports to extract rule descriptions and formulas.
 - Outputs the extracted data into a neatly formatted Excel file.
 - Preserves the original line breaks in the formulas.
-- Customizable to handle different HTML structures and formats.
 
 ---
 
@@ -36,6 +33,7 @@ Before setting up and running the tool, ensure that you have the following insta
 - **Required Python Libraries**:
   - `beautifulsoup4`: For parsing HTML files.
   - `openpyxl`: For writing to Excel files.
+  - `chardet`: For automatic encoding detection.
 
 To install these libraries, follow the steps in the installation guide.
 
@@ -52,32 +50,33 @@ To install these libraries, follow the steps in the installation guide.
 Once Python is installed, you need to install the libraries used by the script. Open a terminal or command prompt and run the following commands:
 
 ```bash
-pip install beautifulsoup4 openpyxl
+pip install beautifulsoup4 openpyxl chardet
 ```
 
-This installs the necessary libraries for parsing HTML files and writing to Excel.
+This installs the necessary libraries for parsing HTML files, writing to Excel, and detecting file encoding.
 
 ---
 
 ## **4. Detailed Workflow**
 
 ### **Step 1: Directory Setup**
-1. **Create a folder** on your machine where you will store the script and HTML files. For example, `C:\Users\denny\Dev\zCompany\Jackson\05SourceCode\05htmtoexcelformula`.
+1. **Create a folder** on your machine where you will store the script and HTML files. For example:  
+   `C:\Users\denny\Dev\zCompany\Jackson\05SourceCode\05htmtoexcelformula`
    
-2. **Create an input folder** inside this directory where you will place the `.htm` files:
-   ```
-   C:\Users\denny\Dev\zCompany\Jackson\05SourceCode\05htmtoexcelformula\input_htm
-   ```
+2. **Create an input folder** inside this directory where you will place the `.htm` files:  
+   `C:\Users\denny\Dev\zCompany\Jackson\05SourceCode\05htmtoexcelformula\input_htm`
 
 3. **Place the HTML files** (like `Batch_BrokerManagement.htm` or other reports) into the `input_htm` folder.
 
-4. **Create an output folder** where the Excel reports will be saved:
-   ```
-   C:\Users\denny\Dev\zCompany\Jackson\05SourceCode\05htmtoexcelformula\output
-   ```
+4. **Create an output folder** where the Excel reports will be saved:  
+   `C:\Users\denny\Dev\zCompany\Jackson\05SourceCode\05htmtoexcelformula\output`
 
 ### **Step 2: Python Script**
 In the same directory, create a Python script file called `formula_extractor.py` and paste the following code into it:
+
+---
+
+### **Complete Code with Automatic Encoding Detection:**
 
 ```python
 import os
@@ -86,14 +85,27 @@ import openpyxl
 import logging
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Alignment
+import chardet
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+def detect_encoding(file_path):
+    """Detect the encoding of the file."""
+    with open(file_path, 'rb') as raw_file:
+        raw_data = raw_file.read()
+        result = chardet.detect(raw_data)
+        return result['encoding']
+
 def extract_data_from_htm(file_path):
     extracted_data = []
     try:
-        with open(file_path, 'r', encoding='utf-8') as file:
+        # Detect the file's encoding
+        encoding = detect_encoding(file_path)
+        logging.info(f"Detected encoding for {file_path}: {encoding}")
+
+        # Open the file with the detected encoding
+        with open(file_path, 'r', encoding=encoding) as file:
             soup = BeautifulSoup(file, 'html.parser')
 
             sections = soup.find_all('h3')  # Assuming rule sections start with <h3>
@@ -156,6 +168,8 @@ if __name__ == "__main__":
     process_htm_reports(input_directory, output_excel)
 ```
 
+---
+
 ### **Step 3: Run the Script**
 
 To run the script:
@@ -172,7 +186,8 @@ To run the script:
 
 ### **Expected Output:**
 - The script will process all `.htm` files inside the `input_htm` folder.
-- It will extract the rule descriptions and formulas, and write them into an Excel file with proper multi-line formatting.
+- It will automatically detect the encoding of each file.
+- The extracted rule descriptions and formulas will be written into an Excel file with proper multi-line formatting.
 - The Excel file will be saved in the `output` folder with the name `formula_report.xlsx`.
 
 ---
@@ -181,16 +196,19 @@ To run the script:
 
 ### **Key Components of the Code:**
 
-1. **HTML Parsing (BeautifulSoup)**:
+1. **Encoding Detection**:
+   - The `detect_encoding()` function uses `chardet` to analyze the file's bytes and return the detected encoding.
+   
+2. **HTML Parsing (BeautifulSoup)**:
    - The script reads each `.htm` file and uses `BeautifulSoup` to find `<h3>` tags for rule descriptions and `<pre>` tags for formulas.
    
-2. **Data Extraction**:
+3. **Data Extraction**:
    - The `extract_data_from_htm()` function collects the extracted rule descriptions and formulas into a list.
 
-3. **Writing to Excel (openpyxl)**:
+4. **Writing to Excel (openpyxl)**:
    - The `write_to_excel()` function writes the extracted data to an Excel file and ensures that formulas are displayed with line breaks using the `wrap_text=True` property.
 
-4. **Column Sizing**:
+5. **Column Sizing**:
    - Column widths are adjusted to 50 characters to ensure that the content is readable, and formulas are not truncated.
 
 ---
@@ -201,40 +219,16 @@ To run the script:
 - By default, the script looks for `.htm` files in the `input_htm` folder and saves the Excel file to the `output` folder.
 - You can change these paths in the script by modifying the `input_directory` and `output_excel` variables.
 
-### **HTML Structure**:
-- If your HTML reports have a different structure, you can adjust the tag selectors in the `extract_data_from_htm()` function. For example, if formulas are in a different tag (not `<pre>`), you can change the line:
-   ```python
-   formula_tag = section.find_next('pre')  # Modify if necessary
-   ```
-
 ---
 
 ## **7. Troubleshooting**
 
-### **1. Missing Data in Excel Report**:
-- Ensure the `.htm` files follow the expected structure. If formulas or rules are in different tags, modify the HTML parsing logic.
-
-### **2. Errors While Running the Script**:
-- Make sure all required libraries (`beautifulsoup4`, `openpyxl`) are installed by running:
-  ```bash
-  pip install beautifulsoup4 openpyxl
-  ```
-
-### **3. Encoding Issues**:
-- If you encounter encoding errors, make sure the `.htm` files are encoded in UTF-8 or change the encoding in the script:
-  ```python
-  with open(file_path, 'r', encoding='utf-8') as file:
-      # File reading logic here
-  ```
+### **Encoding Issues**:
+- If you still encounter encoding issues, try running the `chardet` detection manually to check the detected encoding for specific files.
 
 ---
 
 ## **8. Conclusion**
 
-The **HTML Formula Extraction to Excel Tool** automates the process of extracting rule descriptions and formulas from static HTML reports and writing them into an Excel file while preserving the formatting. This tool is highly customizable and can be adapted to different HTML structures or report formats, making it a valuable tool for
+The **HTML Formula Extraction to Excel Tool with Automatic Encoding Detection** automates the process of extracting rule descriptions and formulas from static HTML reports and writing them into an Excel file. The added functionality of automatic encoding detection ensures smooth handling of files with different encodings.
 
- automating data extraction tasks.
-
-By following the setup and instructions in this guide, you can easily run the tool to process large numbers of HTML reports and generate structured Excel files with neatly formatted formulas.
-
-Let me know if you need further customization or adjustments!
