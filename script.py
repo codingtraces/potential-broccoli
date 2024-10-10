@@ -27,20 +27,29 @@ def extract_data_from_htm(file_path):
         try:
             with open(file_path, 'r', encoding=encoding) as file:
                 soup = BeautifulSoup(file, 'html.parser')
+                # Log the first 1000 characters to check if reading works
+                logging.info(f"First 1000 characters of {file_path}: {soup.prettify()[:1000]}")
         except Exception as e:
             logging.warning(f"Failed to parse {file_path} with detected encoding {encoding}. Falling back to utf-8.")
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as file:
                 soup = BeautifulSoup(file, 'html.parser')
+                # Log the first 1000 characters to check if reading works with fallback
+                logging.info(f"First 1000 characters of {file_path} (utf-8 fallback): {soup.prettify()[:1000]}")
 
-        # Look for formula sections marked by <pre> tags
+        # Locate all the <pre> tags that contain the formulas
         formula_sections = soup.find_all('pre')
 
         for formula_tag in formula_sections:
             # Check if the formula is prefixed by "Formula:" to ensure relevance
             if 'Formula:' in formula_tag.text:
-                rule_title = formula_tag.find_previous('a').text.strip()  # The rule title is in the previous <a> tag
-                formula_text = formula_tag.get_text().strip()  # Extract the formula text
-                extracted_data.append((rule_title, formula_text, file_path))
+                # Find the nearest preceding <a> tag for the rule identifier
+                previous_a_tag = formula_tag.find_previous('a')
+                if previous_a_tag:
+                    rule_title = previous_a_tag.text.strip()  # The rule title from the <a> tag
+                    formula_text = formula_tag.get_text().strip()  # Extract the formula text
+                    extracted_data.append((rule_title, formula_text, file_path))
+                else:
+                    logging.warning(f"No <a> tag found for formula in {file_path}")
     
     except Exception as e:
         logging.error(f"Error parsing file {file_path}: {e}")
