@@ -1,6 +1,13 @@
-Below is the detailed implementation of the Spring Boot XML to JSON Converter API, covering both raw XML input and file uploads. This guide will help you step by step, ensuring the code is complete, correct, and ready for deployment.
+Here is the full Spring Boot XML to JSON Converter API project with package name com.infosys, complete with code, configuration, and testing instructions.
 
-Step-by-Step Guide
+Spring Boot XML to JSON Converter API
+
+This project demonstrates a Spring Boot application with:
+
+	1.	Raw XML input handling via REST API.
+	2.	XML file upload with JSON response.
+
+Project Setup
 
 1. Create the Project Using Spring Initializr
 
@@ -9,11 +16,11 @@ Step-by-Step Guide
 	•	Project: Maven
 	•	Language: Java
 	•	Spring Boot Version: 3.3.4
-	•	Group: com.jackson
+	•	Group: com.infosys
 	•	Artifact: xmltojson
 	•	Name: xmltojson
-	•	Description: XML to JSON conversion for Jackson Insurance
-	•	Package Name: com.jackson.xmltojson
+	•	Description: XML to JSON conversion for Infosys.
+	•	Package Name: com.infosys.xmltojson
 	•	Packaging: Jar
 	•	Java Version: 17
 	3.	Add Dependencies:
@@ -22,15 +29,13 @@ Step-by-Step Guide
 	4.	Click “Generate” to download the project.
 	5.	Unzip the downloaded project and open it in IntelliJ IDEA.
 
-2. Project Structure
-
-After following the steps, your project structure will look like this:
+Project Structure
 
 src/
 ├── main/
 │   ├── java/
 │   │   └── com/
-│   │       └── jackson/
+│   │       └── infosys/
 │   │           └── xmltojson/
 │   │               ├── XmlToJsonApplication.java
 │   │               ├── controller/
@@ -40,13 +45,11 @@ src/
 │   └── resources/
 │       └── application.properties
 
-3. Code Implementation
+Code Implementation
 
 1. Main Application Class – XmlToJsonApplication.java
 
-This is the entry point for the Spring Boot application.
-
-package com.jackson.xmltojson;
+package com.infosys.xmltojson;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -60,9 +63,7 @@ public class XmlToJsonApplication {
 
 2. XML to JSON Converter Utility – XmlJsonConverter.java
 
-This class handles the conversion of XML to JSON using Jackson’s XmlMapper.
-
-package com.jackson.xmltojson.util;
+package com.infosys.xmltojson.util;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -83,14 +84,9 @@ public class XmlJsonConverter {
 
 3. REST Controller – XmlToJsonController.java
 
-This controller exposes two endpoints:
+package com.infosys.xmltojson.controller;
 
-	1.	POST /api/xmltojson/raw: Accepts raw XML input in the request body.
-	2.	POST /api/xmltojson/upload: Accepts an XML file upload.
-
-package com.jackson.xmltojson.controller;
-
-import com.jackson.xmltojson.util.XmlJsonConverter;
+import com.infosys.xmltojson.util.XmlJsonConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -106,9 +102,6 @@ public class XmlToJsonController {
     @Autowired
     private XmlJsonConverter xmlJsonConverter;
 
-    /**
-     * Converts raw XML input from the request body to JSON.
-     */
     @PostMapping(
             path = "/raw",
             consumes = MediaType.APPLICATION_XML_VALUE,
@@ -123,9 +116,6 @@ public class XmlToJsonController {
         }
     }
 
-    /**
-     * Converts an uploaded XML file to JSON.
-     */
     @PostMapping(
             path = "/upload",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
@@ -144,11 +134,9 @@ public class XmlToJsonController {
 
 4. Configuration – application.properties
 
-Since this version is simple, we don’t need specific configurations. Ensure the application.properties file remains empty or add the following:
-
 server.port=8080
 
-5. Running the Application
+Running the Application
 
 	1.	Build the Project:
 	•	In IntelliJ, go to Build > Build Project or press Ctrl + F9.
@@ -157,7 +145,19 @@ server.port=8080
 
 The application will start on http://localhost:8080.
 
-6. Testing the API
+Testing the API
+
+Sample XML File – policy.xml
+
+<?xml version="1.0" encoding="UTF-8"?>
+<Policy>
+    <PolicyNumber>POL123456</PolicyNumber>
+    <PolicyType>Life Insurance</PolicyType>
+    <Insured>
+        <Name>John Doe</Name>
+        <Address>123 Main St, Anytown, USA</Address>
+    </Insured>
+</Policy>
 
 Option 1: Send Raw XML via Postman
 
@@ -167,7 +167,7 @@ Option 1: Send Raw XML via Postman
 	•	Content-Type: application/xml
 	4.	Body: Raw (Text format)
 
-Example XML:
+Example XML Input:
 
 <?xml version="1.0" encoding="UTF-8"?>
 <Policy>
@@ -215,14 +215,12 @@ File Upload:
 
 curl -F "file=@/path/to/policy.xml" http://localhost:8080/api/xmltojson/upload
 
-7. Summary
+Summary
 
-This version provides:
+This project provides:
 
 	1.	Raw XML input handling via a REST API.
-	2.	File upload support to convert XML files to JSON.
-	3.	Easy-to-understand structure with modular design for future enhancements.
+	2.	File upload support for converting XML files to JSON.
+	3.	Modular design for easy future enhancements.
 
-This solution gives you flexibility for real-time conversion and file uploads, making it ideal for both internal APIs and client-facing applications.
-
-Let me know if you have further questions or need additional enhancements!
+This solution is ready to use and easy to expand for additional features. Let me know if you need further assistance!
