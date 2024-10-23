@@ -1,244 +1,252 @@
-
-# **Project: PAD System Modernization and THOR-Exstream Integration**
-
----
-
-## **Epic 1582: Refractor THOR to Handle Increased Load/Usage (2024)**
+Here is the **corrected structure** where each tool is a **user story** with relevant tasks. As requested, the documentation is now part of the tasks under each user story.
 
 ---
 
-### **Feature 1582.1: XML to JSON Converter for THOR and Exstream Integration**
+# **Project: Print Modernization and System Integration**
 
 ---
 
-#### **User Story 1582.1.1: Implement XML Parsing in Java**
-- **Description:**  
-  Develop Java logic to parse XML input data to ensure compatibility with THOR and Exstream systems.
+## **Epic 1: XML Wrapper and THOR to OpenText Integration**
+
+---
+
+### **Feature 1.1: XML Wrapper for THOR to OpenText Integration**
+
+---
+
+#### **User Story 1.1.1:**  
+**As a developer, I need to develop an XML wrapper to read files from THOR and convert them to JSON for OpenText compatibility.**
 
 - **Acceptance Criteria:**  
-  - XML data is parsed into Java objects.  
-  - Handles invalid or missing XML fields gracefully.  
-  - Unit tests cover normal and edge cases.
-
-- **Story Points:** 3  
-- **Tasks:**  
-  1. Create a Java class to parse XML using JAXB or Jackson.  
-  2. Write unit tests for valid and invalid XML scenarios.  
-  3. Handle exceptions and add logging.
-
----
-
-#### **User Story 1582.1.2: Implement JSON Conversion Logic**
-- **Description:**  
-  Convert parsed XML data into JSON format that matches the schema expected by Exstream.
-
-- **Acceptance Criteria:**  
-  - JSON output matches the required schema.  
-  - Handles optional and missing fields appropriately.  
-  - Unit tests validate the JSON conversion logic.
-
-- **Story Points:** 3  
-- **Tasks:**  
-  1. Use Jackson to convert Java objects into JSON.  
-  2. Validate JSON structure with sample data.  
-  3. Write tests to verify JSON conversion logic.
-
----
-
-#### **User Story 1582.1.3: Implement Error Handling and Logging**
-- **Description:**  
-  Add error handling and logging to ensure smooth operation and troubleshooting.
-
-- **Acceptance Criteria:**  
-  - Errors are logged with detailed messages.  
-  - Converter continues processing despite minor input errors.  
-
-- **Story Points:** 3 1
-- **Tasks:**  
-  1. Implement logging using SLF4J or Log4J.  
-  2. Handle malformed XML gracefully.  
-  3. Write test cases to verify logging output.
-
----
-
----
-
-## **Epic 1585: Convert PAD System to Exstream (2024)**
-
----
-
-### **Feature 1585.1: PAD System Analysis and Access Setup**
-
----
-
-#### **User Story 1585.1.1: Coordinate with IT for PAD System Access**
-- **Description:**  
-  Request and verify access to the PAD system for all team members.
-
-- **Acceptance Criteria:**  
-  - All developers have access to the PAD system.  
-  - Access is confirmed by running a test query.
-
-- **Story Points:** 1  
-- **Tasks:**  
-  1. Submit access requests to IT.  
-  2. Verify access by executing a sample query.  
-  3. Document the access process.
-
----
-
-#### **User Story 1585.1.2: Analyze PAD Codebase and Dependencies**
-- **Description:**  
-  Analyze the PAD system codebase to identify key modules and dependencies.
-
-- **Acceptance Criteria:**  
-  - All dependencies are listed and documented.  
-  - Modules and their relationships are identified.  
-  - A system diagram is prepared.
+  - XML wrapper reads files from the specified THOR directory.  
+  - Converts XML to JSON with support for nested structures.  
+  - Handles missing fields and logs errors gracefully.  
+  - Processes up to 1MB XML files in under 5 seconds.  
 
 - **Story Points:** 8  
+
 - **Tasks:**  
-  1. Review PAD codebase and identify key components.  
-  2. Create a system flow diagram.  
-  3. Document all external dependencies (APIs, databases).
+  1. **Configure Input-Output Paths:**  
+     - Setup input path to read XML files from THOR.  
+     - Configure output path to store JSON files.
+  2. **Develop XML Parsing Logic:**  
+     - Use **JAXB** or **Jackson** to parse complex XML.
+  3. **Implement JSON Conversion:**  
+     - Convert XML to JSON using **Jackson** while ensuring schema compliance.  
+  4. **Error Handling and Logging:**  
+     - Log errors with detailed messages and timestamps.  
+  5. **Documentation Task:**  
+     - Create detailed usage instructions for the XML wrapper in `xml_wrapper_guide.md`.
 
 ---
 
-#### **User Story 1585.1.3: Prepare PAD System Modernization Proposal**
-- **Description:**  
-  Draft a proposal outlining the modernization plan for the PAD system.
+---
+
+## **Epic 2: Tools Development and Automation**
+
+---
+
+### **Feature 2.1: Tools for System Modernization**
+
+---
+
+#### **User Story 2.1.1: Develop FAP to PDF Converter**  
+**As a developer, I need to create a tool to convert FAP files to PDFs for document processing.**
 
 - **Acceptance Criteria:**  
-  - Proposal lists recommended technologies and architecture.  
-  - High-level timelines and milestones are defined.  
-  - Proposal is approved by stakeholders.
+  - The tool converts FAP files to PDF accurately.  
+  - Preserves the original layout and formatting.  
+  - Supports batch processing for multiple files.  
+
+- **Story Points:** 4  
+
+- **Tasks:**  
+  1. **Develop PDF Generation Logic:**  
+     - Implement parsing logic for FAP files.  
+     - Generate PDFs with proper formatting.
+  2. **Batch Processing Support:**  
+     - Add support for processing multiple files.
+  3. **Error Logging:**  
+     - Log any conversion errors with timestamps.
+  4. **Documentation Task:**  
+     - Create usage instructions and troubleshooting guide in `fap_to_pdf_guide.md`.
+
+---
+
+#### **User Story 2.1.2: Develop FAP to Word Converter**  
+**As a developer, I need to create a tool to convert FAP files to Word documents for document processing.**
+
+- **Acceptance Criteria:**  
+  - Converts FAP files to Word while preserving layout.  
+  - Supports batch processing for multiple files.  
+  - Generates error logs for failed conversions.
+
+- **Story Points:** 4  
+
+- **Tasks:**  
+  1. **Develop Word Generation Logic:**  
+     - Implement logic to generate Word documents from FAP files.
+  2. **Batch Processing Support:**  
+     - Add batch processing capabilities.
+  3. **Error Handling and Logging:**  
+     - Log errors encountered during conversion.
+  4. **Documentation Task:**  
+     - Write a usage guide with examples in `fap_to_word_guide.md`.
+
+---
+
+#### **User Story 2.1.3: Develop PDF Split Tool**  
+**As a developer, I need to build a PDF split tool to manage large PDF files effectively.**
+
+- **Acceptance Criteria:**  
+  - Splits PDFs by page range or size.  
+  - Logs all operations with detailed timestamps.  
+  - Supports batch mode for multiple PDFs.
+
+- **Story Points:** 3  
+
+- **Tasks:**  
+  1. **Develop Split Logic:**  
+     - Implement logic to split PDFs based on size or range.
+  2. **Batch Processing:**  
+     - Add batch mode support for multiple files.
+  3. **Error Logging:**  
+     - Log operations and errors.
+  4. **Documentation Task:**  
+     - Document tool usage in `pdf_split_guide.md`.
+
+---
+
+#### **User Story 2.1.4: Develop PDF Rationalization Tool**  
+**As a developer, I need to create a tool to rationalize PDF content by comparing templates and generating reports.**
+
+- **Acceptance Criteria:**  
+  - Compares PDFs to identify similarities and redundancies.  
+  - Generates detailed comparison reports.  
+  - Supports large PDF files and batch processing.
 
 - **Story Points:** 5  
+
 - **Tasks:**  
-  1. Identify potential modern technologies for PAD.  
-  2. Create a high-level project timeline.  
-  3. Review proposal with stakeholders.
+  1. **Develop PDF Comparison Logic:**  
+     - Implement logic to compare PDFs.
+  2. **Generate Rationalization Reports:**  
+     - Create detailed reports based on comparison results.
+  3. **Batch Mode Processing:**  
+     - Add support for batch mode.
+  4. **Documentation Task:**  
+     - Write tool documentation in `pdf_rationalization_guide.md`.
 
 ---
 
----
-
-## **Epic: Python Tools Development**
-
----
-
-### **Feature 3.1: Copybook and Data Conversion Tools**
-
----
-
-#### **User Story 3.1.1: Develop Copybook to JSON Converter** (Complete)
-- **Description:**  
-  Create a Python script to convert mainframe copybooks to JSON format for easier processing and integration.
+#### **User Story 2.1.5: Develop HTML to Excel Report Converter**  
+**As a developer, I need to create a tool to convert OpenText-generated HTML reports to Excel format.**
 
 - **Acceptance Criteria:**  
-  - Copybooks are accurately converted to JSON.  
-  - Various copybook formats are supported.  
-  - Documentation is available for usage.
+  - Extracts content accurately from HTML and maps it to Excel.  
+  - Supports dynamic data fields.  
+  - Logs conversion operations and errors.
 
-- **Story Points:** 3  
+- **Story Points:** 4  
+
 - **Tasks:**  
-  1. Implement logic to parse copybook structures.  
-  2. Develop JSON structure mapping.  
-  3. Add error handling for invalid copybooks.  
-  4. Write user documentation with examples.
+  1. **Develop HTML Parsing Logic:**  
+     - Implement logic to extract content from HTML.
+  2. **Excel Mapping:**  
+     - Map extracted data to Excel format.
+  3. **Error Handling:**  
+     - Log operations and errors during conversion.
+  4. **Documentation Task:**  
+     - Document the usage in `html_to_excel_guide.md`.
 
 ---
 
-#### **User Story 3.1.2: Implement Form Application to Word Converter** (Complete)
-- **Description:**  
-  Create a Python script to convert Form Application (FAP) files to Microsoft Word documents while preserving formatting.
+#### **User Story 2.1.6: Develop Copybook to JSON Converter**  
+**As a developer, I need to develop a Python tool to convert copybook files to JSON for integration with modern systems.**
 
 - **Acceptance Criteria:**  
-  - FAP files are converted to Word with layout intact.  
-  - Batch processing is supported.  
-  - Error logs are generated for failed conversions.
+  - Converts various copybook formats to JSON accurately.  
+  - Handles malformed files gracefully with error logs.  
+  - Includes detailed usage documentation.
 
-- **Story Points:** 3  
+- **Story Points:** 4  
+
 - **Tasks:**  
-  1. Implement FAP parsing logic.  
-  2. Develop logic to generate Word documents.  
-  3. Add batch processing support.  
-  4. Test with multiple FAP files and validate output.
+  1. **Develop Conversion Logic:**  
+     - Implement parsing logic to convert copybooks to JSON.
+  2. **Error Handling:**  
+     - Log any conversion errors.
+  3. **Testing:**  
+     - Test with multiple copybook samples.
+  4. **Documentation Task:**  
+     - Create usage documentation in `copybook_to_json_guide.md`.
 
 ---
 
 ---
 
-## **Epic: Completed Tools Documentation**
+## **Epic 3: System Integration**
 
 ---
 
-### **Feature 4.1: Maintain and Document Completed Tools**
+### **Feature 3.1: OpenText and Mainframe Integration**
 
 ---
 
-#### **User Story 4.1.1: Document PDF Split Tool (`03_pdfspli.md`)** (Complete)
-- **Description:**  
-  Document the purpose and usage of the PDF Split tool for future reference.
+#### **User Story 3.1.1:**  
+**As a developer, I need to integrate the mainframe with OpenText to enable seamless data exchange.**
 
 - **Acceptance Criteria:**  
-  - Documentation covers the tool’s purpose and usage.  
-  - Usage instructions include examples.
+  - Data flows smoothly between the systems.  
+  - Logs are generated for synchronization activities.  
+  - Data integrity is verified post-transfer.
 
-- **Story Points:** 1  
+- **Story Points:** 5  
+
 - **Tasks:**  
-  1. Write the purpose of the PDF Split tool.  
-  2. Create step-by-step usage instructions.  
-  3. Review and share documentation with the team.
+  1. **Design Integration Points:**  
+     - Identify key points for data exchange between systems.
+  2. **Develop Synchronization Logic:**  
+     - Implement logic for real-time synchronization.
+  3. **Test Integration:**  
+     - Validate with test transactions.
 
 ---
 
-#### **User Story 4.1.2: Document PDF Rationalization Report Tool (`04_pdfrationalizationreport.md`)** (Complete)
-- **Description:**  
-  Document the PDF Rationalization Report tool for future reference and maintenance.
+---
+
+## **Epic 4: Quality Assurance and Testing**
+
+---
+
+### **Feature 4.1: Automated Testing and Validation**
+
+---
+
+#### **User Story 4.1.1:**  
+**As a developer, I need to create automated tests to validate the tools developed.**
 
 - **Acceptance Criteria:**  
-  - Documentation covers usage and troubleshooting.  
-  - Purpose is clearly outlined.
+  - Automated tests cover all critical functionality.  
+  - Test results are logged and analyzed.  
+  - Performance tests simulate heavy workloads.
 
-- **Story Points:** 1  
+- **Story Points:** 4  
+
 - **Tasks:**  
-  1. Write the tool’s purpose and usage.  
-  2. Create a troubleshooting guide.  
-  3. Share the document with stakeholders.
-
----
-
-#### **User Story 4.1.3: Maintain PAD Rationalization Parallel Processing Tool (`05_padfrationalizationpdfparalle.py`)** (Complete)
-- **Description:**  
-  Maintain the parallel processing tool for PDF rationalization.
-
-- **Acceptance Criteria:**  
-  - Documentation is complete and up-to-date.  
-  - Maintenance plan is prepared.
-
-- **Story Points:** 1  
-- **Tasks:**  
-  1. Write the tool’s logic and purpose.  
-  2. Create a maintenance checklist.  
-  3. Share the document with relevant stakeholders.
-
----
-
-#### **User Story 4.1.4: Document Copybook to JSON Conversion Tool (`06_copybooktojsonfromdat.md`)** (Complete)
-- **Description:**  
-  Provide detailed documentation for the Copybook to JSON Conversion tool.
-
-- **Acceptance Criteria:**  
-  - Documentation includes usage instructions and examples.  
-  - Tool purpose is clearly outlined.
-
-- **Story Points:** 1  
-- **Tasks:**  
-  1. Write usage instructions with examples.  
-  2. Provide detailed purpose and logic documentation.  
-  3. Share the document with the team.
+  1. **Develop Test Scripts:**  
+     - Create automated test scripts for all tools.
+  2. **Simulate Large Data:**  
+     - Test tools with large datasets.
+  3. **Analyze Test Logs:**  
+     - Review logs to ensure all tests pass.
 
 ---
 
 ---
+
+## **Conclusion**
+
+This structure now reflects the correct approach, where each tool is represented as a **user story**, with documentation as part of the tasks. This version is focused on practical development, system integration, and testing, ensuring all elements align with your requirements.
+
+Let me know if you need further changes!
