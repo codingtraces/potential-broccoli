@@ -4,34 +4,46 @@ import logging
 import chardet
 from bs4 import BeautifulSoup
 import openpyxl
-from openpyxl.styles import Alignment, Font
 from openpyxl.utils import get_column_letter
+from openpyxl.styles import Alignment, Font
 
-# Set up logging
+# Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def detect_encoding(file_path):
-    """Detect encoding using chardet for robustness."""
-    with open(file_path, 'rb') as file:
-        raw_data = file.read(4096)
-        result = chardet.detect(raw_data)
-        encoding = result['encoding'] if result['confidence'] > 0.5 else 'utf-8'
-        logging.info(f"Detected encoding: {encoding}")
-    return encoding
+    """Detect encoding using chardet."""
+    try:
+        with open(file_path, 'rb') as f:
+            raw_data = f.read(1024 * 1024)  # Read 1MB for encoding detection
+            result = chardet.detect(raw_data)
+            return result.get('encoding', 'utf-8')
+    except Exception as e:
+        logging.error(f"Error detecting encoding: {e}")
+        return 'utf-8'
 
-def parse_rule_name(tag):
-    """Extract rule ID and name from an h3 tag."""
-    rule_pattern = re.match(r"^(R\d+)\s+(.*)", tag.get_text(strip=True))
-    if rule_pattern:
-        return rule_pattern.group(1), rule_pattern.group(2)
-    return None, None
+def parse_rule(tag):
+    """Extract rule ID, name, and formula."""
+    header = tag.find('h3')
+    if header and header.get_text(strip=True).startswith('R'):
+        rule_id, rule_name = parse_rule_name(header.get_text(strip=True))
+        formula = tag.find('div', class_='formula').get_text('\n', strip=False)
+        category = categorize_rule(rule_name)
+        return (rule_id, rule_name, formula, category)
+    return None
+
+def parse_rule_name(text):
+    """Extract rule ID and name from the text."""
+    match = re.match(r"(R\d+)\s*(.*)", text)
+    if match:
+        return match.group(1), match.group(2)
+    return "UNKNOWN", "UNKNOWN_RULE"
 
 def categorize_rule(rule_name):
-    """Categorize rules based on relevant keywords."""
+    """Categorize rules based on keywords."""
     categories = {
         "Queue": "Queue Rule",
         "Page": "Page Rule",
-        "Component": "Component",
+        "Component": "Component Rule",
         "Document": "Document Rule",
         "Design": "Page Design"
     }
@@ -40,82 +52,57 @@ def categorize_rule(rule_name):
             return category
     return "Uncategorized"
 
-def extract_rules_from_html(file_path):
-    """Extract rules from HTML files, handling encoding properly."""
+def extract_rules(file_path):
+    """Extract rules from HTML files."""
     encoding = detect_encoding(file_path)
-    with open(file_path, 'r', encoding=encoding, errors='replace') as file:
-        soup = BeautifulSoup(file, 'html.parser')
+    rules = []
+    try:
+        with open(file_path, 'r', encoding=encoding, errors='ignore') as f:
+            soup = BeautifulSoup(f, 'html.parser')
+            tags = soup.find_all('div', class_='rule')
+            for tag in tags:
+                rule_data = parse_rule(tag)
+                if rule_data:
+                    rules.append(rule_data)
+    except Exception as e:
+        logging.error(f"Error extracting rules from {file_path}: {e}")
+    return rules
 
-    rules_data = []
-    for rule in soup.find_all('div', class_='rule'):
-        rule_heading = rule.find('h3')
-        if rule_heading and not re.match(r"^F\d+", rule_heading.get_text(strip=True)):
-            rule_id, rule_name = parse_rule_name(rule_heading)
-            if rule_id:
-                formula_text = rule.find('div', class_='formula').get_text('\n', strip=False)
-                rules_data.append((
-                    rule_id,
-                    rule_name,
-                    formula_text.strip(),
-                    categorize_rule(rule_name)
-                ))
-
-    return rules_data
-
-def auto_fit_columns(sheet):
-    """Auto-fit Excel columns based on content width."""
-    for col in sheet.columns:
-        max_length = max(len(str(cell.value) or "") for cell in col)
-        col_letter = get_column_letter(col[0].column)
-        sheet.column_dimensions[col_letter].width = min(max_length + 2, 50)
-
-def write_to_excel(data, output_path):
-    """Write rules into an Excel sheet with preserved formatting."""
+def write_to_excel(data, output_file):
+    """Write extracted rules to an Excel file."""
     workbook = openpyxl.Workbook()
     sheet = workbook.active
     sheet.title = 'Rules'
+    sheet.append(['Rule ID', 'Rule Name', 'Formula', 'Category'])
 
-    # Add headers
-    headers = ['Rule ID', 'Rule Name', 'Formula', 'Category']
-    sheet.append(headers)
-
-    # Populate rows
-    for row_index, row in enumerate(data, start=2):
+    for row in data:
         sheet.append(row)
+        sheet.cell(sheet.max_row, 3).alignment = Alignment(wrap_text=True)
+        sheet.cell(sheet.max_row, 3).font = Font(name='Courier New')
 
-        # Apply text wrapping and alignment for the formula column
-        formula_cell = sheet.cell(row=row_index, column=3)
-        formula_cell.alignment = Alignment(wrap_text=True, vertical='top', horizontal='left')
-        formula_cell.font = Font(name='Courier New')  # For code-like formatting
+    for col in range(1, 5):
+        sheet.column_dimensions[get_column_letter(col)].width = 50
 
-    auto_fit_columns(sheet)
-    workbook.save(output_path)
-    logging.info(f"Rules report saved at {output_path}")
+    workbook.save(output_file)
+    logging.info(f"Saved rules report to {output_file}")
 
-def process_rules(input_folder, output_file):
-    """Extract and process all rules from HTML files."""
+def process_rules(input_dir, output_file):
+    """Process all HTML files in the input directory."""
     all_rules = []
-    total_files = sum(len(files) for _, _, files in os.walk(input_folder))
-    processed_files = 0
-
-    for root, _, files in os.walk(input_folder):
+    for root, _, files in os.walk(input_dir):
         for file in files:
             if file.endswith(('.html', '.htm')):
                 file_path = os.path.join(root, file)
-                logging.info(f"Processing: {file_path}")
-                extracted_rules = extract_rules_from_html(file_path)
-                all_rules.extend(extracted_rules)
-                processed_files += 1
-                logging.info(f"Progress: {processed_files}/{total_files} files processed")
+                logging.info(f"Processing {file_path}")
+                rules = extract_rules(file_path)
+                all_rules.extend(rules)
 
     if all_rules:
         write_to_excel(all_rules, output_file)
     else:
-        logging.warning("No rules found in the provided HTML files.")
+        logging.warning("No rules found.")
 
 if __name__ == "__main__":
-    # Paths for input HTML folder and output Excel file
-    input_folder = './input_htm'
+    input_dir = './input_htm'
     output_file = './output/rules_report.xlsx'
-
-    process_rules(input_folder, output_file)
+    process_rules(input_dir, output_file)
