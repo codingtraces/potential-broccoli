@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="ISO-8859-1">
+    <title>Application Report</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1, h2 {
+            text-align: center;
+            color: darkred;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .formula {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            white-space: pre;
+            overflow: auto;
+        }
+        .rules-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .rules-table th, .rules-table td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        .rules-table th {
+            background-color: #d3d3d3;
+        }
+        .rule {
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Application Report</h1>
+
+    <div class="section">
+        <h2>Rules List</h2>
+
+        <div class="rule">
+            <h3>R10335 Enc PrimaryInclusion Rule</h3>
+            <div class="formula">
+                IF (LiveSubmit() &lt;&gt; TRUE) THEN<br>
+                IND_ENCLOSURE_PRIMARYINCLUSION_FLAG=TRUE<br>
+                ENDIF
+            </div>
+        </div>
+
+        <div class="rule">
+            <h3>R123 Queue Rule Invalid Address Output Queue</h3>
+            <div class="formula">
+                IF SYS_CurrentProfile = "" THEN<br>
+                EXCLUDE<br>
+                ELSE<br>
+                Dim SplitIndCount as integer<br>
+                Dim Doc_Cnt as integer<br>
+                IF Correspondence_DeliveryMethod = "MA" THEN<br>
+                    For Doc_Cnt = 1 to COUNT(REF_RecipientData_Document_RecipientCode)<br>
+                        IF REF_RecipientData_Document_RecipientCode(Doc_Cnt) = "Y" THEN<br>
+                            INCLUDE<br>
+                        ENDIF<br>
+                    NEXT<br>
+                ENDIF
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Function List</h2>
+
+        <div class="rule">
+            <h3>F286 CC LINE COMPUTATION</h3>
+            <div class="formula">
+                Dim Doc_Cnt as integer<br>
+                Dim Add_Cnt as integer<br>
+                DIS_Signature_CC_Line_Name = ""<br>
+                IF COUNT(REF_RecipientData_Document_RecipientCode) &gt; 2 THEN<br>
+                    For Doc_Cnt = 2 to COUNT(REF_RecipientData_Document_RecipientCode)<br>
+                        For Add_Cnt = 1 to COUNT(DRV_RecipientData_Address_RecipientCode(Add_Cnt))<br>
+                            IF ... (truncated)
+            </div>
+        </div>
+
+        <div class="rule">
+            <h3>F375 Company Address Lookup Fn Batch</h3>
+            <div class="formula">
+                Dim i as integer<br>
+                i = 1 //USER_ARRAY<br>
+                Correspondence_Company_AddressList=USER_ARRAY(2)<br>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>Table Example</h2>
+        <table class="rules-table">
+            <tr>
+                <th>ID</th>
+                <th>Start</th>
+                <th>Length</th>
+                <th>Variable</th>
+                <th>Important</th>
+            </tr>
+            <tr>
+                <td>A001</td>
+                <td>1</td>
+                <td>20</td>
+                <td>SYS SortIndex</td>
+                <td>0</td>
+            </tr>
+            <tr>
+                <td>A002</td>
+                <td>21</td>
+                <td>16</td>
+                <td>Correspondence Bundle key</td>
+                <td>0</td>
+            </tr>
+            <tr>
+                <td>A003</td>
+                <td>37</td>
+                <td>16</td>
+                <td>Correspondence Sort key</td>
+                <td>0</td>
+            </tr>
+        </table>
+    </div>
+
+</body>
+</html>
