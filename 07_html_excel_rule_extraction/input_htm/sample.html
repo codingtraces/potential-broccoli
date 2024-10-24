@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="ISO-8859-1">
-    <title>Application Report</title>
+    <title>Operational Report - Grocery Store</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -10,7 +10,7 @@
         }
         h1, h2 {
             text-align: center;
-            color: darkred;
+            color: darkblue;
         }
         .section {
             margin-bottom: 30px;
@@ -19,7 +19,7 @@
             background-color: #f5f5f5;
             padding: 10px;
             border-radius: 5px;
-            white-space: pre;
+            white-space: pre; /* Ensures spacing and indentation */
             overflow: auto;
         }
         .rules-table {
@@ -42,95 +42,109 @@
 </head>
 <body>
 
-    <h1>Application Report</h1>
+    <h1>Operational Report - Grocery Store</h1>
 
+    <!-- Component Rules Section -->
     <div class="section">
-        <h2>Rules List</h2>
-
+        <h2>Component Rules</h2>
         <div class="rule">
-            <h3>R10335 Enc PrimaryInclusion Rule</h3>
+            <h3>R101 Component Stock Threshold Rule</h3>
             <div class="formula">
-                IF (LiveSubmit() &lt;&gt; TRUE) THEN<br>
-                IND_ENCLOSURE_PRIMARYINCLUSION_FLAG=TRUE<br>
-                ENDIF
-            </div>
-        </div>
-
-        <div class="rule">
-            <h3>R123 Queue Rule Invalid Address Output Queue</h3>
-            <div class="formula">
-                IF SYS_CurrentProfile = "" THEN<br>
-                EXCLUDE<br>
-                ELSE<br>
-                Dim SplitIndCount as integer<br>
-                Dim Doc_Cnt as integer<br>
-                IF Correspondence_DeliveryMethod = "MA" THEN<br>
-                    For Doc_Cnt = 1 to COUNT(REF_RecipientData_Document_RecipientCode)<br>
-                        IF REF_RecipientData_Document_RecipientCode(Doc_Cnt) = "Y" THEN<br>
-                            INCLUDE<br>
-                        ENDIF<br>
-                    NEXT<br>
+                IF (Stock_Level < Minimum_Threshold) THEN
+                    ALERT Staff "Restock Required"
                 ENDIF
             </div>
         </div>
     </div>
 
+    <!-- Page Design Rules Section -->
+    <div class="section">
+        <h2>Page Design Rules</h2>
+        <div class="rule">
+            <h3>R202 Page Layout Optimization Rule</h3>
+            <div class="formula">
+                IF (Aisle_Crowd_Flow = "High") THEN
+                    DISPLAY "Popular Items" on Front Page
+                ELSE
+                    DISPLAY "Offers" on Front Page
+                ENDIF
+            </div>
+        </div>
+    </div>
+
+    <!-- Queue Rules Section -->
+    <div class="section">
+        <h2>Queue Rules</h2>
+        <div class="rule">
+            <h3>R303 Customer Checkout Queue Rule</h3>
+            <div class="formula">
+                IF (Queue_Length > 5) THEN
+                    OPEN New_Checkout_Counter
+                ELSE
+                    MAINTAIN Current_Setup
+                ENDIF
+            </div>
+        </div>
+    </div>
+
+    <!-- Document Rules Section -->
+    <div class="section">
+        <h2>Document Rules</h2>
+        <div class="rule">
+            <h3>R404 Invoice Generation Rule</h3>
+            <div class="formula">
+                FOR Each Product IN Customer_Cart
+                    ADD Product_Details TO Invoice
+                GENERATE Invoice
+            </div>
+        </div>
+    </div>
+
+    <!-- Function List Section -->
     <div class="section">
         <h2>Function List</h2>
-
         <div class="rule">
-            <h3>F286 CC LINE COMPUTATION</h3>
+            <h3>F501 Loyalty Points Calculation</h3>
             <div class="formula">
-                Dim Doc_Cnt as integer<br>
-                Dim Add_Cnt as integer<br>
-                DIS_Signature_CC_Line_Name = ""<br>
-                IF COUNT(REF_RecipientData_Document_RecipientCode) &gt; 2 THEN<br>
-                    For Doc_Cnt = 2 to COUNT(REF_RecipientData_Document_RecipientCode)<br>
-                        For Add_Cnt = 1 to COUNT(DRV_RecipientData_Address_RecipientCode(Add_Cnt))<br>
-                            IF ... (truncated)
-            </div>
-        </div>
-
-        <div class="rule">
-            <h3>F375 Company Address Lookup Fn Batch</h3>
-            <div class="formula">
-                Dim i as integer<br>
-                i = 1 //USER_ARRAY<br>
-                Correspondence_Company_AddressList=USER_ARRAY(2)<br>
+                FOR Each Transaction IN Customer_History
+                    ADD Points = Amount * 0.1
+                    UPDATE Customer_Account
+                END FOR
             </div>
         </div>
     </div>
 
+    <!-- Product Table Section -->
     <div class="section">
-        <h2>Table Example</h2>
+        <h2>Product Table</h2>
         <table class="rules-table">
             <tr>
                 <th>ID</th>
                 <th>Start</th>
                 <th>Length</th>
                 <th>Variable</th>
-                <th>Important</th>
+                <th>Critical</th>
             </tr>
             <tr>
-                <td>A001</td>
+                <td>P001</td>
                 <td>1</td>
+                <td>10</td>
+                <td>Aisle_Number</td>
+                <td>Yes</td>
+            </tr>
+            <tr>
+                <td>P002</td>
+                <td>11</td>
+                <td>15</td>
+                <td>Product_ID</td>
+                <td>No</td>
+            </tr>
+            <tr>
+                <td>P003</td>
+                <td>26</td>
                 <td>20</td>
-                <td>SYS SortIndex</td>
-                <td>0</td>
-            </tr>
-            <tr>
-                <td>A002</td>
-                <td>21</td>
-                <td>16</td>
-                <td>Correspondence Bundle key</td>
-                <td>0</td>
-            </tr>
-            <tr>
-                <td>A003</td>
-                <td>37</td>
-                <td>16</td>
-                <td>Correspondence Sort key</td>
-                <td>0</td>
+                <td>Discount_Eligibility</td>
+                <td>No</td>
             </tr>
         </table>
     </div>
