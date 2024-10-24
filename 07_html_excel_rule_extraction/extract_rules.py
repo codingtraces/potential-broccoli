@@ -1,6 +1,7 @@
 import os
 import re
 import logging
+import chardet
 from bs4 import BeautifulSoup
 import openpyxl
 from openpyxl.styles import Alignment, Font
@@ -10,13 +11,16 @@ from openpyxl.utils import get_column_letter
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 def detect_encoding(file_path):
-    """Detect encoding of the HTML file."""
+    """Detect encoding using chardet for robustness."""
     with open(file_path, 'rb') as file:
-        raw_data = file.read(1024)
-    return 'utf-8'  # Defaulting to utf-8
+        raw_data = file.read(4096)
+        result = chardet.detect(raw_data)
+        encoding = result['encoding'] if result['confidence'] > 0.5 else 'utf-8'
+        logging.info(f"Detected encoding: {encoding}")
+    return encoding
 
 def parse_rule_name(tag):
-    """Extract the rule ID and name from an h3 tag."""
+    """Extract rule ID and name from an h3 tag."""
     rule_pattern = re.match(r"^(R\d+)\s+(.*)", tag.get_text(strip=True))
     if rule_pattern:
         return rule_pattern.group(1), rule_pattern.group(2)
@@ -37,9 +41,9 @@ def categorize_rule(rule_name):
     return "Uncategorized"
 
 def extract_rules_from_html(file_path):
-    """Extract rules only, ensuring no functions appear."""
+    """Extract rules from HTML files, handling encoding properly."""
     encoding = detect_encoding(file_path)
-    with open(file_path, 'r', encoding=encoding) as file:
+    with open(file_path, 'r', encoding=encoding, errors='replace') as file:
         soup = BeautifulSoup(file, 'html.parser')
 
     rules_data = []
