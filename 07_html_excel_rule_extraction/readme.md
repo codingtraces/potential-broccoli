@@ -1,187 +1,177 @@
+### **Full Documentation for HTML to Excel Report Generator**
 
-# **HTML Formula Extraction to Excel Tool Documentation**
-
-## **Table of Contents**
-1. Introduction
-2. Prerequisites
-3. Installation Guide
-4. Folder Structure
-5. Running the Tool
-6. Code Explanation
-7. Customization Options
-8. Troubleshooting
-9. Conclusion
+This documentation provides an overview of the code, installation instructions, folder structure, setup, and how to run your project properly.
 
 ---
 
-## **1. Introduction**
+## **Overview**
 
-The **HTML Formula Extraction to Excel Tool** is a Python script that extracts rules and formulas from static `.htm` or `.html` reports and writes them into an Excel file with clean formatting. The tool also supports automatic encoding detection and handles a variety of HTML structures.
-
-### **Key Features**:
-- Automatically detects file encoding using the `chardet` library.
-- Parses HTML reports to extract rule descriptions, rule IDs, and formulas.
-- Outputs the extracted data into an Excel file.
-- Preserves the original formatting of the formulas.
-- Supports handling large files and logging errors efficiently.
+This Python script:
+- **Parses HTML files** to extract rules and functions.
+- **Classifies rules** based on specific keywords.
+- **Generates an Excel report** with two sheets: "Rules" and "Functions".
+- **Formats Excel sheets** to wrap text for readability.
 
 ---
 
-## **2. Prerequisites**
+## **Prerequisites**
 
-Before running the tool, ensure that you have the following:
-- **Windows Operating System**: Installation steps use Chocolatey for installing Python.
-- **Python 3.6 or later**: Installed via Chocolatey (or directly).
-- **Required Python Libraries**:
-  - `beautifulsoup4`: For parsing HTML files.
-  - `openpyxl`: For writing to Excel files.
-  - `chardet`: For automatic encoding detection.
+- Python 3.x installed on your system.
+- **HTML input files** for testing.
+- Libraries: `pandas`, `beautifulsoup4`, `xlsxwriter`.
 
 ---
 
-## **3. Installation Guide**
+## **Installation Instructions**
 
-### **Step 1: Install Chocolatey**
-Chocolatey is a Windows package manager. If you don’t have it installed, follow these steps:
-1. **Open PowerShell** as Administrator (search for PowerShell, right-click, and select "Run as administrator").
-2. Run the following command to install Chocolatey:
-
-   ```powershell
-   Set-ExecutionPolicy Bypass -Scope Process -Force; `
-   [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; `
-   iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-   ```
-
-3. Verify Chocolatey is installed by running:
-
-   ```bash
-   choco --version
-   ```
-
-### **Step 2: Install Python via Chocolatey**
-1. Run the following command to install Python:
-
-   ```bash
-   choco install python -y
-   ```
-
-2. After installation, restart the terminal or command prompt and verify Python is installed:
-
-   ```bash
-   python --version
-   ```
-
-3. Ensure `pip` is installed:
-
-   ```bash
-   python -m ensurepip --upgrade
-   ```
-
-### **Step 3: Install Required Python Libraries**
-Once Python is installed, you need to install the necessary libraries. Run the following commands in the terminal or command prompt:
+Open a terminal or command prompt and run:
 
 ```bash
-pip install beautifulsoup4 openpyxl chardet
+# Install the required libraries
+pip install pandas beautifulsoup4 xlsxwriter
 ```
-
-This installs the necessary libraries for parsing HTML files, writing to Excel, and detecting file encoding.
 
 ---
 
-## **4. Folder Structure**
+## **Folder Structure**
 
-To run the tool, you need to have a specific folder structure on your machine. Here's the recommended setup:
+Make sure your project follows the structure below:
 
 ```
-Project_Folder
-│   formula_extractor.py           # Main Python script
-│   README.md                      # Documentation or ReadMe file (optional)
+project_root/
 │
-├───input_htm                      # Folder for HTML input files
-│       report1.htm
-│       report2.htm
-│       report3.htm
-│       ... (more .htm or .html files)
-│
-└───output                         # Folder for Excel output
-        formula_report.xlsx         # Output Excel file (auto-generated)
+├── code/                     
+│   └── main_script.py        # The provided Python script goes here
+├── input/                    # Folder containing the HTML files to process
+│   └── sample.html           # Example HTML file (add more files here)
+├── output/                   
+│   └── rules_report.xlsx     # Output Excel report will be saved here
 ```
 
-### **Step 1: Create the Project Folder**
-1. Create a folder on your system, for example:  
-   `C:\Users\Company\05htmtoexcelformula`
-   
-2. Inside this folder, create two subfolders:
-   - **input_htm**: Place your `.htm` or `.html` files in this folder.
-   - **output**: The script will generate the Excel file in this folder.
+- **`code/`**: Contains the Python script (your main code).
+- **`input/`**: Add your `.html` or `.htm` files here to be processed.
+- **`output/`**: The Excel report (`rules_report.xlsx`) will be generated in this folder.
 
 ---
 
-## **5. Running the Tool**
+## **How to Run the Code**
 
-### **Step 1: Add HTML Files**
-- Place all your `.htm` or `.html` files in the `input_htm` folder you created earlier.
-  - Example files: `report1.htm`, `report2.htm`, `report3.htm`, etc.
+### Step 1: Navigate to the `code` folder
+Open your terminal or command prompt and move to the `code` folder:
 
-### **Step 2: Run the Script**
-1. Open a terminal or command prompt.
-2. Navigate to the project folder using the `cd` command:
+```bash
+cd path/to/project_root/code
+```
 
-   ```bash
-   cd C:\Users\Company\05htmtoexcelformula
-   ```
+### Step 2: Run the Script
+Execute the script using:
 
-3. Run the script:
-
-   ```bash
-   python formula_extractor.py
-   ```
-
-### **Step 3: View the Output**
-- After the script finishes processing, check the `output` folder for the generated `formula_report.xlsx` file.
+```bash
+python main_script.py
+```
 
 ---
 
-## **6. Code Explanation**
+## **Functionality of the Script**
 
-### **Key Components**:
-1. **Encoding Detection**: The `detect_encoding()` function uses the `chardet` library to detect the encoding of each HTML file before parsing it.
-2. **HTML Parsing (BeautifulSoup)**: The script reads each `.htm` file and uses `BeautifulSoup` to find rule IDs, rule names, and formulas.
-3. **Excel Writing (openpyxl)**: The `write_to_excel()` function writes the extracted data into an Excel file, ensuring formulas are displayed with line breaks using `wrap_text=True`.
-4. **Column Sizing**: Column widths are adjusted to 50 characters for readability.
+1. **Extract Rules and Functions from HTML**:
+   - Reads HTML files from the `input` folder.
+   - Extracts **rule names**, **IDs**, **formulas**, and **categories**.
+   - Identifies **functions** and their formulas.
 
----
+2. **Generate Excel Report**:
+   - Saves two sheets in the Excel file: **Rules** and **Functions**.
+   - Applies **text wrapping** for better readability.
 
-## **7. Customization Options**
-
-### **Input/Output Paths**:
-- By default, the script looks for `.htm` files in the `input_htm` folder and saves the Excel file in the `output` folder. You can change these paths in the script by modifying the `input_directory` and `output_excel` variables.
-
-### **Handling Large Files**:
-- The script can handle large HTML files efficiently due to memory-safe operations and by only reading the first 1MB of each file for encoding detection.
-
-### **HTML Structure Variations**:
-- The script can handle a variety of HTML formats where rule IDs and names may be in different tags like `<h3>`, `<strong>`, etc. The code is designed to flexibly detect these elements.
+3. **Error Handling**:
+   - Checks if the `input` folder exists; if not, displays an error.
+   - Automatically creates the `output` folder if it doesn't exist.
 
 ---
 
-## **8. Troubleshooting**
+## **Sample Output**
 
-### **Common Issues**:
+### Rules Sheet Example:
+| Rule ID | Rule Name    | Formula                | Category      |
+|---------|--------------|------------------------|---------------|
+| 1       | Queue Rule   | IF condition THEN ...  | Queue         |
+| 2       | Component1   | formula() + var ...    | Component     |
 
-1. **Encoding Errors**:
-   - If the encoding of an HTML file cannot be detected, it defaults to `utf-8`. If issues persist, check if the file is corrupted or non-standard.
-
-2. **No Data Extracted**:
-   - Ensure that the `.htm` or `.html` files in the `input_htm` folder contain rule and formula structures that the script can detect. Check if tags like `<h3>` or `<pre>` are used for rule names and formulas.
-
-3. **Excel Output Format**:
-   - If the formatting in Excel does not appear correctly, ensure the `wrap_text=True` option is used in the `write_to_excel()` function.
+### Functions Sheet Example:
+| Function ID | Function Name | Function Formula |
+|-------------|---------------|------------------|
+| 1           | Func1         | def func1(): ... |
 
 ---
 
-## **9. Conclusion**
+## **Script Logic Overview**
 
-The **HTML Formula Extraction to Excel Tool** automates the process of extracting rule IDs, rule names, and formulas from HTML reports and exporting them to an Excel file. With features like automatic encoding detection and support for various HTML structures, this tool is highly adaptable and efficient.
+- **Libraries Used**:
+  - `os`: For folder and file operations.
+  - `re`: For regular expression-based extraction.
+  - `pandas`: To store data in DataFrames and write to Excel.
+  - `BeautifulSoup`: To parse HTML files.
+  - `xlsxwriter`: To generate and format Excel reports.
 
-By following the installation guide and using the provided script, you can easily process large numbers of HTML files and generate structured Excel reports with well-formatted formulas.
+- **Core Functions**:
+  - **`extract_rules_and_functions(html_file)`**:  
+    Extracts rules and functions from the provided HTML file.
+  - **`generate_excel_report(rules, functions)`**:  
+    Creates and formats the Excel report based on the extracted data.
+
+---
+
+## **Handling Errors**
+
+1. **Missing Input Folder**:
+   - If the `input` folder is missing, the script will display:  
+     *"Input folder not found."*
+
+2. **Missing Libraries**:
+   - If `xlsxwriter` is not installed, the script will display:  
+     *"Error: 'xlsxwriter' module not found. Install it using 'pip install xlsxwriter'."*
+
+3. **HTML File Processing Errors**:
+   - If any HTML file cannot be processed, the script prints:  
+     *"Error processing `<file_name>`: `<error_message>`"*
+
+---
+
+## **Customization**
+
+- **Modify Input/Output Folders**:  
+  Change the following variables in the script if you want to use different folders:
+
+  ```python
+  INPUT_FOLDER = "../input"
+  OUTPUT_FOLDER = "../output"
+  ```
+
+- **Change Rule Categories**:  
+  Update the categories assigned to rules by modifying this section:
+
+  ```python
+  if "Queue" in rule_name:
+      category = "Queue"
+  elif "Component" in rule_name:
+      category = "Component"
+  elif "Page Rule" in rule_name:
+      category = "Page Rule"
+  ```
+
+---
+
+## **Expected Output Location**
+
+After running the script, the Excel report will be saved as:
+
+```
+output/rules_report.xlsx
+```
+
+---
+
+## **Conclusion**
+
+This script provides a quick and structured way to extract content from HTML files and generate well-formatted reports in Excel. With the proper folder setup and required libraries installed, it ensures easy processing and report generation. 
+
