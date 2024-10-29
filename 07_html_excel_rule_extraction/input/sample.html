@@ -1,92 +1,127 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html>
 <html>
 <head>
-    <title>Grocery Store Report</title>
+    <title>Application Report</title>
 </head>
 <body>
-    <p align="center"><big>Grocery Store Report</big><br />
-        <strong><big><font color="#008000">Batch_InventoryManagement</font></big></strong>
+
+    <p align="center"><big>Application Report</big><br />
+        <strong>Batch_BrokerManagement</strong>
     </p>
 
-    <div align="left">
-        <table border="0" cellspacing="0" width="100%" bordercolorlight="#008080">
-            <tr>
-                <td width="28%">Report Date:</td>
-                <td width="72%">2024-10-30 10:15:00</td>
-            </tr>
-        </table>
-    </div>
-
-    <p align="center"><big>Grocery Report<br /><strong>Pricing Rules List</strong></big></p>
+    <p align="center"><big>Application Report<br /><strong>Rules List</strong></big></p>
 
     <div align="left">
-        <a name="#Rule10101" />
-        <strong>R10101 <font color="#008000">Discount_Applied_Rule</font></strong><br /><br />
+        <a name="#Rule1" />
+        <strong>R1 <font color="#0000FF">Queue_Batch_Processing_Rule</font></strong><br /><br />
         <em>Formula:</em>
         <pre>
-        IF(PromotionActive = TRUE AND Category = "Fruits") THEN
-            Discount = 10%
-        ELSE
-            Discount = 0%
+        IF(ProcessStatus = "Pending") THEN
+            QueueBatch = TRUE
         ENDIF
         </pre>
     </div>
 
-    <hr />
-
     <div align="left">
-        <a name="#Rule20202" />
-        <strong>R20202 <font color="#008000">Stock_Level_Check_Rule</font></strong><br /><br />
+        <a name="#Rule12" />
+        <strong>R12 <font color="#0000FF">Component_Rule_Setup</font></strong><br /><br />
         <em>Formula:</em>
         <pre>
-        IF(Stock < Reorder_Level) THEN
-            NotifySupplier = TRUE
-        ELSE
-            StockStatus = "Sufficient"
+        IF(ComponentType = "Active") THEN
+            EnableComponent = TRUE
         ENDIF
         </pre>
     </div>
 
-    <hr />
-
-    <p align="center"><big>Grocery Report<br /><strong>Function List</strong></big></p>
-
     <div align="left">
-        <a name="#Function201" />
-        <strong>F201 <font color="#008000">Supplier_Contact_Lookup_Fn</font></strong><br /><br />
+        <a name="#Rule123" />
+        <strong>R123 <font color="#0000FF">Page_Load_Validation</font></strong><br /><br />
         <em>Formula:</em>
         <pre>
-        dim supplier as string
-
-        IF getOS() = "WINDOWS" THEN
-            supplier = FileMap("Supplier_List", "C:\\Grocery\\Suppliers.txt", True)
-        ELSE
-            supplier = "/home/grocery/resources/Suppliers/Suppliers_List.txt"
+        IF(PageLoadTime > 5) THEN
+            ShowWarning = TRUE
         ENDIF
-
-        Print("Contact supplier at: " + supplier)
         </pre>
     </div>
 
-    <hr />
-
     <div align="left">
-        <a name="#Function301" />
-        <strong>F301 <font color="#008000">Calculate_Total_Price_Fn</font></strong><br /><br />
+        <a name="#Rule1234" />
+        <strong>R1234 <font color="#0000FF">Document_Approval_Check</font></strong><br /><br />
         <em>Formula:</em>
         <pre>
-        dim totalPrice as double
-
-        totalPrice = Quantity * PricePerUnit
-
-        IF(Discount > 0) THEN
-            totalPrice = totalPrice - (totalPrice * Discount / 100)
+        IF(DocumentStatus = "Approved") THEN
+            NotifyUser = TRUE
         ENDIF
-
-        Print("Total Price: $" + totalPrice)
         </pre>
     </div>
 
-    <hr />
+    <div align="left">
+        <a name="#Rule12345" />
+        <strong>R12345 <font color="#0000FF">Banner_Visibility_Rule</font></strong><br /><br />
+        <em>Formula:</em>
+        <pre>
+        IF(UserRole = "Admin") THEN
+            ShowBanner = TRUE
+        ENDIF
+        </pre>
+    </div>
+
+    <div align="left">
+        <a name="#Rule123456" />
+        <strong>R123456 <font color="#0000FF">Unknown_Rule_Name</font></strong><br /><br />
+        <em>Formula:</em>
+        <pre>
+        IF(SomethingHappens = TRUE) THEN
+            DoSomething = TRUE
+        ENDIF
+        </pre>
+    </div>
+
+    <p align="center"><big>Application Report<br /><strong>Function List</strong></big></p>
+
+    <div align="left">
+        <a name="#Function1" />
+        <strong>F1 <font color="#0000FF">Queue_Handling_Function</font></strong><br /><br />
+        <em>Formula:</em>
+        <pre>
+        IF(JobQueue > 0) THEN
+            ProcessJob = TRUE
+        ENDIF
+        </pre>
+    </div>
+
+    <div align="left">
+        <a name="#Function12" />
+        <strong>F12 <font color="#0000FF">Component_Monitoring_Function</font></strong><br /><br />
+        <em>Formula:</em>
+        <pre>
+        IF(ComponentHealth = "Fail") THEN
+            RestartComponent = TRUE
+        ENDIF
+        </pre>
+    </div>
+
+    <div align="left">
+        <a name="#Function123" />
+        <strong>F123 <font color="#0000FF">Page_Validation_Function</font></strong><br /><br />
+        <em>Formula:</em>
+        <pre>
+        IF(PageStatus = "Invalid") THEN
+            LogError = TRUE
+        ENDIF
+        </pre>
+    </div>
+
+    <div align="left">
+        <a name="#Function1234" />
+        <strong>F1234 <font color="#0000FF">Document_Creation_Function</font></strong><br /><br />
+        <em>Formula:</em>
+        <pre>
+        IF(DocumentType = "PDF") THEN
+            CreateDocument = TRUE
+        ENDIF
+        </pre>
+    </div>
+
 </body>
 </html>
