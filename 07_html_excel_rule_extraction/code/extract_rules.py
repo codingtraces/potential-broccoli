@@ -1,6 +1,7 @@
 import os
 import re
 import pandas as pd
+from html import unescape
 from bs4 import BeautifulSoup
 
 # Configuration: Keywords, Identifiers, and Section Headers
@@ -34,12 +35,21 @@ def classify_category(name):
             break  # Stop once a match is found to prioritize the first match
     return matched_category
 
+import html2text
+
 def extract_formula(block):
-    """Extract and preserve the original formula with correct spacing and alignment."""
+    """Extract formula using html2text to preserve original formatting, handling lengthy blocks."""
     formula_tag = block.find('pre')
     if formula_tag:
-        # Preserve all original spacing and newlines exactly as in the HTML
-        return formula_tag.text
+        # Initialize the HTML2Text converter to retain alignment and disable word wrapping.
+        converter = html2text.HTML2Text()
+        converter.body_width = 0  # Ensure no word wrapping occurs.
+
+        # Preserve long formulas with exact formatting
+        formula = converter.handle(str(formula_tag))
+
+        # Clean up and ensure no extra leading/trailing newlines or spaces
+        return formula.rstrip('\n')  # Use rstrip to remove only trailing newlines
     return "No formula found"
 
 
