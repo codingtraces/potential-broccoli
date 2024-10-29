@@ -3,6 +3,8 @@ import re
 import pandas as pd
 from html import unescape
 from bs4 import BeautifulSoup
+import html2text
+import gc  # Garbage collector to handle memory management
 
 # Configuration: Keywords, Identifiers, and Section Headers
 CATEGORY_PATTERNS = {
@@ -19,39 +21,37 @@ SECTION_HEADERS = {
     'functions': 'Function List'
 }
 
-RULE_IDENTIFIER = r'R(\d+)'  # Updated to capture all patterns like R1, R12, R1234
+RULE_IDENTIFIER = r'R(\d+)'
 FUNCTION_IDENTIFIER = r'F(\d+)'
 
 INPUT_FOLDER = "../input"
 OUTPUT_FOLDER = "../output"
 OUTPUT_FILE = os.path.join(OUTPUT_FOLDER, "rules_report.xlsx")
 
+# Use lxml parser for faster processing
+PARSER = "lxml"
+
 def classify_category(name):
     """Classify the item based on matching keywords."""
-    matched_category = "General Rule"  # Default category
+    matched_category = "General Rule"
     for category, pattern in CATEGORY_PATTERNS.items():
         if re.search(pattern, name):
             matched_category = category
-            break  # Stop once a match is found to prioritize the first match
+            break
     return matched_category
 
-import html2text
-
 def extract_formula(block):
-    """Extract formula using html2text to preserve original formatting, handling lengthy blocks."""
+    """Extract formula using html2text to preserve formatting, optimized for lengthy blocks."""
     formula_tag = block.find('pre')
     if formula_tag:
-        # Initialize the HTML2Text converter to retain alignment and disable word wrapping.
         converter = html2text.HTML2Text()
-        converter.body_width = 0  # Ensure no word wrapping occurs.
+        converter.body_width = 0  # No word wrapping
 
-        # Preserve long formulas with exact formatting
-        formula = converter.handle(str(formula_tag))
+        # Handle long formulas properly
+        formula = converter.handle(str(formula_tag)).rstrip('\n')
 
-        # Clean up and ensure no extra leading/trailing newlines or spaces
-        return formula.rstrip('\n')  # Use rstrip to remove only trailing newlines
+        return formula
     return "No formula found"
-
 
 def extract_rules(block):
     """Extract rules from an HTML block."""
@@ -79,14 +79,14 @@ def extract_functions(block):
     return None
 
 def process_html_file(html_file):
-    """Extract rules and functions from a given HTML file."""
+    """Process large HTML files efficiently."""
     try:
         with open(html_file, 'r', encoding='iso-8859-1') as f:
-            soup = BeautifulSoup(f, 'html.parser')
+            soup = BeautifulSoup(f, PARSER)  # Use lxml parser
 
         rules, functions = [], []
 
-        # Iterate over all 'div' blocks
+        # Process all div blocks
         for block in soup.find_all('div', align='left'):
             section_name = block.find_previous('p').get_text(strip=True).lower() if block.find_previous('p') else ""
 
@@ -100,6 +100,9 @@ def process_html_file(html_file):
                 if function:
                     functions.append(function)
 
+        # Free up memory after processing
+        gc.collect()
+
         return rules, functions
 
     except Exception as e:
@@ -107,7 +110,7 @@ def process_html_file(html_file):
         return [], []
 
 def write_to_excel(writer, data, sheet_name, columns):
-    """Write data to an Excel sheet with proper formatting."""
+    """Write data to Excel with proper formatting."""
     df = pd.DataFrame(data, columns=columns)
     df.to_excel(writer, sheet_name=sheet_name, index=False)
 
@@ -117,7 +120,7 @@ def write_to_excel(writer, data, sheet_name, columns):
     worksheet.set_column('A:D', 30, wrap_format)
 
 def generate_excel_report(rules, functions):
-    """Generate an Excel report with categorized rules and functions."""
+    """Generate the Excel report."""
     try:
         with pd.ExcelWriter(OUTPUT_FILE, engine='xlsxwriter') as writer:
             write_to_excel(writer, rules, 'Rules', ['Rule ID', 'Rule Name', 'Formula', 'Category'])
@@ -150,7 +153,7 @@ def main():
     if all_rules or all_functions:
         generate_excel_report(all_rules, all_functions)
     else:
-        print("No rules or functions extracted from the provided HTML files.")
+        print("No rules or functions extracted.")
 
 if __name__ == "__main__":
     main()
