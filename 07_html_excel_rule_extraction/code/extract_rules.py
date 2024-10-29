@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 
 # Configuration: Keywords, Identifiers, and Section Headers
 CATEGORY_PATTERNS = {
-    'Queue': r'(?i)queue',      # Allows matching 'queue' anywhere in a word
+    'Queue': r'(?i)queue',
     'Component': r'(?i)component',
     'Page Rule': r'(?i)page',
     'Banner': r'(?i)banner',
@@ -13,37 +13,33 @@ CATEGORY_PATTERNS = {
     'Document Rule': r'(?i)document'
 }
 
-
 SECTION_HEADERS = {
-    'rules': 'Rules List',  
-    'functions': 'Functions List'
+    'rules': 'Rules List',
+    'functions': 'Function List',
+    'application_report': 'Application Report'
 }
 
-RULE_IDENTIFIER = r'#Rule(\d+)'   
-FUNCTION_IDENTIFIER = r'#Function(\d+)'  
+RULE_IDENTIFIER = r'#Rule(\d+)'
+FUNCTION_IDENTIFIER = r'#Function(\d+)'
 
 INPUT_FOLDER = "../input"
 OUTPUT_FOLDER = "../output"
 OUTPUT_FILE = os.path.join(OUTPUT_FOLDER, "rules_report.xlsx")
 
-# Function to classify items based on keywords
+# Classify based on name patterns
 def classify_category(name):
-    """
-    Classify the item based on matching keywords.
-    Prioritize matches to avoid misclassification.
-    """
-    matched_category = "General Rule"  # Default category
+    """Classify the item based on matching keywords."""
+    matched_category = "Page Design"  # Default category if no keyword matches
 
     for category, pattern in CATEGORY_PATTERNS.items():
-        if re.search(pattern, name):  # Remove strict word boundary matching
-            matched_category = category  # Override default if a match is found
+        if re.search(pattern, name):
+            return category
 
     return matched_category
 
-
-# Function to extract rules from an HTML block
+# Extract rules with proper categorization
 def extract_rules(block):
-    """Extract rules from the HTML block using rule identifier."""
+    """Extract rules from HTML blocks."""
     rule_match = re.search(RULE_IDENTIFIER, str(block), re.IGNORECASE)
     if rule_match:
         rule_name = block.find('strong').get_text(strip=True) if block.find('strong') else "Unknown"
@@ -52,9 +48,9 @@ def extract_rules(block):
         return [rule_match.group(1), rule_name, formula, category]
     return None
 
-# Function to extract functions from an HTML block
+# Extract functions
 def extract_functions(block):
-    """Extract functions from the HTML block using function identifier."""
+    """Extract functions from HTML blocks."""
     function_match = re.search(FUNCTION_IDENTIFIER, str(block), re.IGNORECASE)
     if function_match:
         function_name = block.find('strong').get_text(strip=True) if block.find('strong') else "Unknown"
@@ -62,23 +58,25 @@ def extract_functions(block):
         return [function_match.group(1), function_name, formula]
     return None
 
-# Helper function to extract formula with spacing consistency
+# Extract and preserve the formula's original structure
 def extract_formula(block):
-    """Extract and preserve the original formula with correct spacing."""
+    """Extract the formula text while maintaining its formatting."""
     formula_tag = block.find('pre')
     return formula_tag.get_text() if formula_tag else "No formula found"
 
-# Function to process a single HTML file
+# Process a single HTML file
 def process_html_file(html_file):
-    """Extract rules and functions from a given HTML file."""
+    """Extract all rules and functions from a given HTML file."""
     try:
         with open(html_file, 'r', encoding='iso-8859-1') as f:
             soup = BeautifulSoup(f, 'html.parser')
 
         rules, functions = [], []
 
+        # Extract all sections
         for block in soup.find_all('div', align='left'):
-            section_name = block.find_previous('p').get_text(strip=True).lower()
+            # Handle section names dynamically
+            section_name = block.find_previous('p').get_text(strip=True).lower() if block.find_previous('p') else ""
 
             if SECTION_HEADERS['rules'].lower() in section_name:
                 rule = extract_rules(block)
@@ -96,9 +94,9 @@ def process_html_file(html_file):
         print(f"Error processing {html_file}: {e}")
         return [], []
 
-# Function to write data to an Excel sheet
+# Write the extracted data into an Excel sheet
 def write_to_excel(writer, data, sheet_name, columns):
-    """Write data to an Excel sheet with proper formatting."""
+    """Write extracted data into Excel with text wrapping."""
     df = pd.DataFrame(data, columns=columns)
     df.to_excel(writer, sheet_name=sheet_name, index=False)
 
@@ -107,7 +105,7 @@ def write_to_excel(writer, data, sheet_name, columns):
     wrap_format = workbook.add_format({'text_wrap': True, 'valign': 'top'})
     worksheet.set_column('A:D', 30, wrap_format)
 
-# Function to generate the Excel report
+# Generate the Excel report
 def generate_excel_report(rules, functions):
     """Generate an Excel report with categorized rules and functions."""
     try:
@@ -120,7 +118,7 @@ def generate_excel_report(rules, functions):
     except Exception as e:
         print(f"Error generating Excel report: {e}")
 
-# Main function to control the program flow
+# Main program flow
 def main():
     """Main function to process all HTML files and generate the report."""
     if not os.path.exists(INPUT_FOLDER):
@@ -132,6 +130,7 @@ def main():
 
     all_rules, all_functions = [], []
 
+    # Process each HTML file in the input folder
     for file_name in os.listdir(INPUT_FOLDER):
         if file_name.endswith(('.html', '.htm')):
             file_path = os.path.join(INPUT_FOLDER, file_name)
@@ -140,11 +139,12 @@ def main():
             all_rules.extend(rules)
             all_functions.extend(functions)
 
+    # Generate Excel report if data exists
     if all_rules or all_functions:
         generate_excel_report(all_rules, all_functions)
     else:
         print("No rules or functions extracted from the provided HTML files.")
 
-# Entry point for the script
+# Entry point
 if __name__ == "__main__":
     main()
