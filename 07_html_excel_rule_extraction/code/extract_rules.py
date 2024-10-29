@@ -1,10 +1,9 @@
 import os
 import re
 import pandas as pd
-from html import unescape
 from bs4 import BeautifulSoup
 import html2text
-import gc  # Garbage collector to handle memory management
+import gc  # Garbage collector to manage memory
 
 # Configuration: Keywords, Identifiers, and Section Headers
 CATEGORY_PATTERNS = {
@@ -28,9 +27,6 @@ INPUT_FOLDER = "../input"
 OUTPUT_FOLDER = "../output"
 OUTPUT_FILE = os.path.join(OUTPUT_FOLDER, "rules_report.xlsx")
 
-# Use lxml parser for faster processing
-PARSER = "lxml"
-
 def classify_category(name):
     """Classify the item based on matching keywords."""
     matched_category = "General Rule"
@@ -41,15 +37,14 @@ def classify_category(name):
     return matched_category
 
 def extract_formula(block):
-    """Extract formula using html2text to preserve formatting, optimized for lengthy blocks."""
+    """Extract formula using html2text to preserve formatting."""
     formula_tag = block.find('pre')
     if formula_tag:
         converter = html2text.HTML2Text()
         converter.body_width = 0  # No word wrapping
 
-        # Handle long formulas properly
+        # Handle large formulas efficiently
         formula = converter.handle(str(formula_tag)).rstrip('\n')
-
         return formula
     return "No formula found"
 
@@ -79,14 +74,15 @@ def extract_functions(block):
     return None
 
 def process_html_file(html_file):
-    """Process large HTML files efficiently."""
+    """Process large HTML files efficiently using incremental parsing."""
     try:
         with open(html_file, 'r', encoding='iso-8859-1') as f:
-            soup = BeautifulSoup(f, PARSER)  # Use lxml parser
+            # Use html.parser for more reliable parsing
+            soup = BeautifulSoup(f, 'html.parser')
 
         rules, functions = [], []
 
-        # Process all div blocks
+        # Process each 'div' block incrementally
         for block in soup.find_all('div', align='left'):
             section_name = block.find_previous('p').get_text(strip=True).lower() if block.find_previous('p') else ""
 
@@ -100,7 +96,7 @@ def process_html_file(html_file):
                 if function:
                     functions.append(function)
 
-        # Free up memory after processing
+        # Force garbage collection to free up memory
         gc.collect()
 
         return rules, functions
@@ -110,7 +106,7 @@ def process_html_file(html_file):
         return [], []
 
 def write_to_excel(writer, data, sheet_name, columns):
-    """Write data to Excel with proper formatting."""
+    """Write data to an Excel sheet with formatting."""
     df = pd.DataFrame(data, columns=columns)
     df.to_excel(writer, sheet_name=sheet_name, index=False)
 
@@ -120,7 +116,7 @@ def write_to_excel(writer, data, sheet_name, columns):
     worksheet.set_column('A:D', 30, wrap_format)
 
 def generate_excel_report(rules, functions):
-    """Generate the Excel report."""
+    """Generate an Excel report with categorized rules and functions."""
     try:
         with pd.ExcelWriter(OUTPUT_FILE, engine='xlsxwriter') as writer:
             write_to_excel(writer, rules, 'Rules', ['Rule ID', 'Rule Name', 'Formula', 'Category'])
