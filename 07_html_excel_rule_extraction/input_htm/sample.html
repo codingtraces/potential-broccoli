@@ -1,153 +1,69 @@
-<!DOCTYPE html>
-<html lang="en">
+<?xml version="1.0" encoding="iso-8859-1"?>
+<html>
 <head>
-    <meta charset="ISO-8859-1">
-    <title>Operational Report - Grocery Store</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        h1, h2 {
-            text-align: center;
-            color: darkblue;
-        }
-        .section {
-            margin-bottom: 30px;
-        }
-        .formula {
-            background-color: #f5f5f5;
-            padding: 10px;
-            border-radius: 5px;
-            white-space: pre; /* Ensures spacing and indentation */
-            overflow: auto;
-        }
-        .rules-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 10px 0;
-        }
-        .rules-table th, .rules-table td {
-            border: 1px solid black;
-            padding: 8px;
-            text-align: left;
-        }
-        .rules-table th {
-            background-color: #d3d3d3;
-        }
-        .rule {
-            margin-bottom: 15px;
-        }
-    </style>
+    <title>Application Report</title>
 </head>
 <body>
+    <p align="center"><big>Application Report</big><br />
+        <strong><big><font color="#0000FF">Batch_BrokerManagement</font></big></strong>
+    </p>
 
-    <h1>Operational Report - Grocery Store</h1>
-
-    <!-- Component Rules Section -->
-    <div class="section">
-        <h2>Component Rules</h2>
-        <div class="rule">
-            <h3>R101 Component Stock Threshold Rule</h3>
-            <div class="formula">
-                IF (Stock_Level < Minimum_Threshold) THEN
-                    ALERT Staff "Restock Required"
-                ENDIF
-            </div>
-        </div>
-    </div>
-
-    <!-- Page Design Rules Section -->
-    <div class="section">
-        <h2>Page Design Rules</h2>
-        <div class="rule">
-            <h3>R202 Page Layout Optimization Rule</h3>
-            <div class="formula">
-                IF (Aisle_Crowd_Flow = "High") THEN
-                    DISPLAY "Popular Items" on Front Page
-                ELSE
-                    DISPLAY "Offers" on Front Page
-                ENDIF
-            </div>
-        </div>
-    </div>
-
-    <!-- Queue Rules Section -->
-    <div class="section">
-        <h2>Queue Rules</h2>
-        <div class="rule">
-            <h3>R303 Customer Checkout Queue Rule</h3>
-            <div class="formula">
-                IF (Queue_Length > 5) THEN
-                    OPEN New_Checkout_Counter
-                ELSE
-                    MAINTAIN Current_Setup
-                ENDIF
-            </div>
-        </div>
-    </div>
-
-    <!-- Document Rules Section -->
-    <div class="section">
-        <h2>Document Rules</h2>
-        <div class="rule">
-            <h3>R404 Invoice Generation Rule</h3>
-            <div class="formula">
-                FOR Each Product IN Customer_Cart
-                    ADD Product_Details TO Invoice
-                GENERATE Invoice
-            </div>
-        </div>
-    </div>
-
-    <!-- Function List Section -->
-    <div class="section">
-        <h2>Function List</h2>
-        <div class="rule">
-            <h3>F501 Loyalty Points Calculation</h3>
-            <div class="formula">
-                FOR Each Transaction IN Customer_History
-                    ADD Points = Amount * 0.1
-                    UPDATE Customer_Account
-                END FOR
-            </div>
-        </div>
-    </div>
-
-    <!-- Product Table Section -->
-    <div class="section">
-        <h2>Product Table</h2>
-        <table class="rules-table">
+    <div align="left">
+        <table border="0" cellspacing="0" width="100%" bordercolorlight="#008080">
             <tr>
-                <th>ID</th>
-                <th>Start</th>
-                <th>Length</th>
-                <th>Variable</th>
-                <th>Critical</th>
-            </tr>
-            <tr>
-                <td>P001</td>
-                <td>1</td>
-                <td>10</td>
-                <td>Aisle_Number</td>
-                <td>Yes</td>
-            </tr>
-            <tr>
-                <td>P002</td>
-                <td>11</td>
-                <td>15</td>
-                <td>Product_ID</td>
-                <td>No</td>
-            </tr>
-            <tr>
-                <td>P003</td>
-                <td>26</td>
-                <td>20</td>
-                <td>Discount_Eligibility</td>
-                <td>No</td>
+                <td width="28%">Report Date:</td>
+                <td width="72%">2024-10-08 14:40:09</td>
             </tr>
         </table>
     </div>
 
+    <p align="center"><big>Application Report<br /><strong>Rules List</strong></big></p>
+
+    <div align="left">
+        <a name="#Rule10335" />
+        <strong>R10335 <font color="#0000FF">Enc_PrimaryInclusion_Rule</font></strong><br /><br />
+        <em>Formula:</em>
+        <pre>
+        IF(LiveSubmit > TRUE) THEN
+            IND_ENCLOSURE_PRIMARYINCLUSION_FLAG=TRUE
+        ENDIF
+        </pre>
+    </div>
+
+    <hr />
+
+    <div align="left">
+        <a name="#Rule9336" />
+        <strong>R9336 <font color="#0000FF">Queue Rule Archiving_Output_Queue</font></strong><br /><br />
+        <em>Formula:</em>
+        <pre>
+        IF(SYS_CurrentProfile = "") THEN
+            EXCLUDE
+        ENDIF
+        </pre>
+    </div>
+
+    <hr />
+
+    <p align="center"><big>Application Report<br /><strong>Function List</strong></big></p>
+
+    <div align="left">
+        <a name="#Function124" />
+        <strong>F124 <font color="#0000FF">SuppForm_REF_PATH_Lookup_Fn</font></strong><br /><br />
+        <em>Formula:</em>
+        <pre>
+        dim i as integer
+
+        IF getos() = "WINDOWS" THEN
+            i = FileMap("Correspondence_SuppForm_ReferenceFile", REF_FORM_REF_LOCATION, True)
+        ELSE
+            REF_Form_Path = "/opt/exstream/app/correspondence/resources/PDF/"
+            REF_FORM_REF_LOCATION = "/opt/exstream/app/correspondence/resources/Reference_File/Correspondence_Forms_ReferenceFile.txt"
+            i = FileMap("Correspondence_SuppForm_ReferenceFile", REF_FORM_REF_LOCATION, True)
+        ENDIF
+        </pre>
+    </div>
+
+    <hr />
 </body>
 </html>

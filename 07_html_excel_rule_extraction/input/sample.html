@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<html>
+<head>
+    <title>Grocery Store Report</title>
+</head>
+<body>
+    <p align="center"><big>Grocery Store Report</big><br />
+        <strong><big><font color="#008000">Batch_InventoryManagement</font></big></strong>
+    </p>
+
+    <div align="left">
+        <table border="0" cellspacing="0" width="100%" bordercolorlight="#008080">
+            <tr>
+                <td width="28%">Report Date:</td>
+                <td width="72%">2024-10-30 10:15:00</td>
+            </tr>
+        </table>
+    </div>
+
+    <p align="center"><big>Grocery Report<br /><strong>Pricing Rules List</strong></big></p>
+
+    <div align="left">
+        <a name="#Rule10101" />
+        <strong>R10101 <font color="#008000">Discount_Applied_Rule</font></strong><br /><br />
+        <em>Formula:</em>
+        <pre>
+        IF(PromotionActive = TRUE AND Category = "Fruits") THEN
+            Discount = 10%
+        ELSE
+            Discount = 0%
+        ENDIF
+        </pre>
+    </div>
+
+    <hr />
+
+    <div align="left">
+        <a name="#Rule20202" />
+        <strong>R20202 <font color="#008000">Stock_Level_Check_Rule</font></strong><br /><br />
+        <em>Formula:</em>
+        <pre>
+        IF(Stock < Reorder_Level) THEN
+            NotifySupplier = TRUE
+        ELSE
+            StockStatus = "Sufficient"
+        ENDIF
+        </pre>
+    </div>
+
+    <hr />
+
+    <p align="center"><big>Grocery Report<br /><strong>Function List</strong></big></p>
+
+    <div align="left">
+        <a name="#Function201" />
+        <strong>F201 <font color="#008000">Supplier_Contact_Lookup_Fn</font></strong><br /><br />
+        <em>Formula:</em>
+        <pre>
+        dim supplier as string
+
+        IF getOS() = "WINDOWS" THEN
+            supplier = FileMap("Supplier_List", "C:\\Grocery\\Suppliers.txt", True)
+        ELSE
+            supplier = "/home/grocery/resources/Suppliers/Suppliers_List.txt"
+        ENDIF
+
+        Print("Contact supplier at: " + supplier)
+        </pre>
+    </div>
+
+    <hr />
+
+    <div align="left">
+        <a name="#Function301" />
+        <strong>F301 <font color="#008000">Calculate_Total_Price_Fn</font></strong><br /><br />
+        <em>Formula:</em>
+        <pre>
+        dim totalPrice as double
+
+        totalPrice = Quantity * PricePerUnit
+
+        IF(Discount > 0) THEN
+            totalPrice = totalPrice - (totalPrice * Discount / 100)
+        ENDIF
+
+        Print("Total Price: $" + totalPrice)
+        </pre>
+    </div>
+
+    <hr />
+</body>
+</html>
