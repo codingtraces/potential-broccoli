@@ -1,155 +1,96 @@
-import os
 import re
+import os
 import pandas as pd
 from bs4 import BeautifulSoup
 import html2text
-import gc  # Garbage collector to manage memory
+from openpyxl import load_workbook
+from openpyxl.styles import Alignment
 
-# Configuration: Keywords, Identifiers, and Section Headers
-CATEGORY_PATTERNS = {
-    'Queue': r'(?i)queue',
-    'Component': r'(?i)component',
-    'Page Rule': r'(?i)page',
-    'Banner': r'(?i)banner',
-    'Batch': r'(?i)batch',
-    'Document Rule': r'(?i)document'
+# Define category mappings for rule names
+CATEGORY_MAPPING = {
+    'queue': 'Queue Rule',
+    'component': 'Component Rule',
+    'page': 'Page Layout / Design Rule',
+    'banner': 'Banner Configuration',
+    'document': 'Document Management',
 }
 
-SECTION_HEADERS = {
-    'rules': 'Rules List',
-    'functions': 'Function List'
-}
+# Enhanced regex to capture everything between two rule IDs
+RULE_BLOCK_PATTERN = r'(R\d+|F\d+)\s+([\w_]+)\s*([\s\S]*?)(?=(R\d+|F\d+|\Z))'
 
-RULE_IDENTIFIER = r'R(\d+)'
-FUNCTION_IDENTIFIER = r'F(\d+)'
+def extract_rules_from_html_file(input_file):
+    """Extracts rules, their names, and formulas from a single HTML file."""
+    with open(input_file, 'r', encoding='utf-8') as file:
+        soup = BeautifulSoup(file, 'html.parser')
 
-INPUT_FOLDER = "../input"
-OUTPUT_FOLDER = "../output"
-OUTPUT_FILE = os.path.join(OUTPUT_FOLDER, "rules_report.xlsx")
+    # Convert HTML content to plain text
+    plain_text = html2text.html2text(str(soup))
 
-def classify_category(name):
-    """Classify the item based on matching keywords."""
-    matched_category = "General Rule"
-    for category, pattern in CATEGORY_PATTERNS.items():
-        if re.search(pattern, name):
-            matched_category = category
-            break
-    return matched_category
+    # Extract all rule blocks between rule IDs
+    rule_blocks = re.findall(RULE_BLOCK_PATTERN, plain_text)
 
-def extract_formula(block):
-    """Extract formula using html2text to preserve formatting."""
-    formula_tag = block.find('pre')
-    if formula_tag:
-        converter = html2text.HTML2Text()
-        converter.body_width = 0  # No word wrapping
+    extracted_data = []
+    for block in rule_blocks:
+        rule_id, rule_name, content = block[:3]  # Extract the rule and its content
+        formula = extract_formula(content)  # Extract formula from content
+        category = categorize_rule(rule_name)
 
-        # Handle large formulas efficiently
-        formula = converter.handle(str(formula_tag)).rstrip('\n')
-        return formula
-    return "No formula found"
+        extracted_data.append({
+            'Rule ID': rule_id,
+            'Rule Name': rule_name,
+            'Formula': formula,
+            'Category': category
+        })
 
-def extract_rules(block):
-    """Extract rules from an HTML block."""
-    strong_tag = block.find('strong')
-    if strong_tag:
-        rule_name = strong_tag.get_text(strip=True)
-        rule_match = re.search(RULE_IDENTIFIER, rule_name)
-        if rule_match:
-            rule_id = rule_match.group(1)
-            formula = extract_formula(block)
-            category = classify_category(rule_name)
-            return [rule_id, rule_name, formula, category]
-    return None
+    return extracted_data
 
-def extract_functions(block):
-    """Extract functions from an HTML block."""
-    strong_tag = block.find('strong')
-    if strong_tag:
-        function_name = strong_tag.get_text(strip=True)
-        function_match = re.search(FUNCTION_IDENTIFIER, function_name)
-        if function_match:
-            function_id = function_match.group(1)
-            formula = extract_formula(block)
-            return [function_id, function_name, formula]
-    return None
+def extract_formula(content):
+    """Extracts the formula from the rule content."""
+    match = re.search(r'Formula:\s*(.*)', content, re.DOTALL)  # Capture multiline formulas
+    return match.group(1).strip() if match else 'N/A'
 
-def process_html_file(html_file):
-    """Process large HTML files efficiently using incremental parsing."""
-    try:
-        with open(html_file, 'r', encoding='iso-8859-1') as f:
-            # Use html.parser for more reliable parsing
-            soup = BeautifulSoup(f, 'html.parser')
+def categorize_rule(rule_name):
+    """Categorizes rules based on their names."""
+    rule_name = rule_name.lower()
+    for keyword, category in CATEGORY_MAPPING.items():
+        if keyword in rule_name:
+            return category
+    return 'General Business Rule'
 
-        rules, functions = [], []
+def extract_rules_from_folder(input_folder, output_file):
+    """Processes all HTML files in the input folder and generates an Excel report."""
+    all_data = []
 
-        # Process each 'div' block incrementally
-        for block in soup.find_all('div', align='left'):
-            section_name = block.find_previous('p').get_text(strip=True).lower() if block.find_previous('p') else ""
+    # Loop through HTML files in the input folder
+    for filename in os.listdir(input_folder):
+        if filename.endswith('.html'):
+            input_file = os.path.join(input_folder, filename)
+            print(f"Processing {input_file}...")
+            data = extract_rules_from_html_file(input_file)
+            all_data.extend(data)
 
-            if SECTION_HEADERS['rules'].lower() in section_name:
-                rule = extract_rules(block)
-                if rule:
-                    rules.append(rule)
+    # Save results to an Excel file
+    df = pd.DataFrame(all_data, columns=['Rule ID', 'Rule Name', 'Formula', 'Category'])
+    df.to_excel(output_file, index=False)
+    print(f"Rules extracted and saved to {output_file}")
+    apply_wrap_text(output_file)
 
-            elif SECTION_HEADERS['functions'].lower() in section_name:
-                function = extract_functions(block)
-                if function:
-                    functions.append(function)
+def apply_wrap_text(file_path):
+    """Applies wrap text to the Formula column in Excel."""
+    wb = load_workbook(file_path)
+    sheet = wb.active
 
-        # Force garbage collection to free up memory
-        gc.collect()
+    for row in sheet.iter_rows(min_row=2, max_row=sheet.max_row, min_col=3, max_col=3):
+        for cell in row:
+            cell.alignment = Alignment(wrap_text=True)
 
-        return rules, functions
+    wb.save(file_path)
+    print("Wrap text applied to the Formula column.")
 
-    except Exception as e:
-        print(f"Error processing {html_file}: {e}")
-        return [], []
+# Define input and output paths
+input_folder = '../input'  # HTML input folder
+output_folder = '../output'  # Excel output folder
+output_file = os.path.join(output_folder, 'extracted_rules.xlsx')
 
-def write_to_excel(writer, data, sheet_name, columns):
-    """Write data to an Excel sheet with formatting."""
-    df = pd.DataFrame(data, columns=columns)
-    df.to_excel(writer, sheet_name=sheet_name, index=False)
-
-    workbook = writer.book
-    worksheet = writer.sheets[sheet_name]
-    wrap_format = workbook.add_format({'text_wrap': True, 'valign': 'top'})
-    worksheet.set_column('A:D', 30, wrap_format)
-
-def generate_excel_report(rules, functions):
-    """Generate an Excel report with categorized rules and functions."""
-    try:
-        with pd.ExcelWriter(OUTPUT_FILE, engine='xlsxwriter') as writer:
-            write_to_excel(writer, rules, 'Rules', ['Rule ID', 'Rule Name', 'Formula', 'Category'])
-            write_to_excel(writer, functions, 'Functions', ['Function ID', 'Function Name', 'Formula'])
-
-        print(f"Excel report generated successfully at: {OUTPUT_FILE}")
-
-    except Exception as e:
-        print(f"Error generating Excel report: {e}")
-
-def main():
-    """Main function to process all HTML files and generate the report."""
-    if not os.path.exists(INPUT_FOLDER):
-        print("Input folder not found.")
-        exit(1)
-
-    if not os.path.exists(OUTPUT_FOLDER):
-        os.makedirs(OUTPUT_FOLDER)
-
-    all_rules, all_functions = [], []
-
-    for file_name in os.listdir(INPUT_FOLDER):
-        if file_name.endswith(('.html', '.htm')):
-            file_path = os.path.join(INPUT_FOLDER, file_name)
-            print(f"Processing file: {file_path}")
-            rules, functions = process_html_file(file_path)
-            all_rules.extend(rules)
-            all_functions.extend(functions)
-
-    if all_rules or all_functions:
-        generate_excel_report(all_rules, all_functions)
-    else:
-        print("No rules or functions extracted.")
-
-if __name__ == "__main__":
-    main()
+# Run the extraction
+extract_rules_from_folder(input_folder, output_file)
