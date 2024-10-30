@@ -6,7 +6,7 @@ import html2text
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment
 
-# Category mapping to classify rules
+# Category mapping to classify rules by keywords
 CATEGORY_MAPPING = {
     'queue': 'Queue Rule',
     'component': 'Component Rule',
@@ -16,27 +16,27 @@ CATEGORY_MAPPING = {
 }
 
 def parse_html_in_chunks(file_path):
-    """Reads the HTML file in chunks to reduce memory usage."""
+    """Reads large HTML files in manageable chunks."""
     try:
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as file:
             soup = BeautifulSoup(file, 'lxml')
 
-        # Extract <pre> and <div> content block by block
-        blocks = soup.find_all(['pre', 'div'])
-        for block in blocks:
+        # Extract only relevant tags to reduce noise
+        content_blocks = soup.find_all(['pre', 'div', 'em'])
+        for block in content_blocks:
             yield html2text.html2text(str(block))
     except Exception as e:
         print(f"Error parsing {file_path}: {e}")
         return []
 
-def extract_rules_from_content(content):
-    """Extracts rules and formulas from the provided content."""
+def extract_rules_and_formulas(content):
+    """Extracts all rules and formulas between rule identifiers."""
     rule_pattern = r'(R\d+|F\d+)\s+([\w_]+)\s*(.*?)\s*(?=R\d+|F\d+|\Z)'
-    rules = re.findall(rule_pattern, content, re.DOTALL)
+    matches = re.findall(rule_pattern, content, re.DOTALL)
 
     extracted_data = []
-    for rule_id, rule_name, rule_content in rules:
-        formula = extract_formula(rule_content)
+    for rule_id, rule_name, formula_content in matches:
+        formula = extract_formula(formula_content)
         category = categorize_rule(rule_name)
         extracted_data.append({
             'Rule ID': rule_id,
@@ -47,12 +47,12 @@ def extract_rules_from_content(content):
     return extracted_data
 
 def extract_formula(content):
-    """Extracts the formula section from the content."""
+    """Extracts the formula section from a block."""
     match = re.search(r'Formula:\s*(.*?)\s*$', content, re.DOTALL)
     return match.group(1).strip() if match else 'N/A'
 
 def categorize_rule(rule_name):
-    """Assigns a category to the rule based on its name."""
+    """Categorizes rules based on keywords in their names."""
     rule_name = rule_name.lower()
     for keyword, category in CATEGORY_MAPPING.items():
         if keyword in rule_name:
@@ -60,11 +60,11 @@ def categorize_rule(rule_name):
     return 'General Business Rule'
 
 def extract_rules_from_html_file(input_file):
-    """Processes a single HTML file and extracts rules."""
+    """Processes a single HTML file and extracts all relevant data."""
     extracted_data = []
     try:
         for chunk in parse_html_in_chunks(input_file):
-            extracted_data.extend(extract_rules_from_content(chunk))
+            extracted_data.extend(extract_rules_and_formulas(chunk))
     except Exception as e:
         print(f"Error extracting rules from {input_file}: {e}")
     return extracted_data
@@ -78,7 +78,7 @@ def extract_rules_from_folder(input_folder, output_file):
             print(f"Processing {input_file}...")
             all_data.extend(extract_rules_from_html_file(input_file))
 
-    # Save data to Excel
+    # Create DataFrame and save to Excel
     df = pd.DataFrame(all_data, columns=['Rule ID', 'Rule Name', 'Formula', 'Category'])
     df.to_excel(output_file, index=False)
     print(f"Rules extracted and saved to {output_file}")
@@ -94,7 +94,7 @@ def apply_wrap_text(file_path):
     wb.save(file_path)
     print("Wrap text applied to the Formula column.")
 
-# Define folder paths for input and output
+# Define folder paths
 input_folder = '../input'
 output_folder = '../output'
 output_file = os.path.join(output_folder, 'extracted_rules.xlsx')
