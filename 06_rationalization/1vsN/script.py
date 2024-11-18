@@ -28,6 +28,8 @@ def validate_pdf(file_path):
             return True
     except Exception as e:
         print(f"Error opening {file_path}: {e}. Skipping...")
+        with open("error_log.txt", 'a') as log_file:
+            log_file.write(f"Error opening {file_path}: {e}\n")
         return False
 
 # Function to analyze a single PDF structure (text)
@@ -55,6 +57,8 @@ def analyze_pdf(file_path):
     except Exception as e:
         print(f"Error processing {file_path}: {e}")
         traceback.print_exc()
+        with open("error_log.txt", 'a') as log_file:
+            log_file.write(f"Error processing {file_path}: {e}\n")
         return None
 
 # Function to compare PDFs and find common elements with similarity percentages
@@ -205,6 +209,8 @@ def analyze_single_vs_all(single_pdf_folder, all_pdf_folder, base_output_folder)
                 print(f"PDF {pdf} generated an exception: {exc}")
                 with open(os.path.join(base_output_folder, "processing_log.txt"), 'a') as log_file:
                     log_file.write(f"{pdf} failed with error: {exc}\n")
+                with open("error_log.txt", 'a') as log_file:
+                    log_file.write(f"PDF {pdf} generated an exception: {exc}\n")
 
     current_time = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
     output_folder = os.path.join(base_output_folder, f"pdf_rationalization_report_{current_time}")
