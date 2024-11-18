@@ -10,10 +10,13 @@ from sklearn.metrics.pairwise import cosine_similarity
 from openpyxl import Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.styles import Alignment, PatternFill
+import re
 
 # Helper function to normalize text for comparison
 def normalize_text(text):
-    return text.lower().strip()
+    text = text.lower().strip()
+    text = re.sub(r'\b[xX]{5,}\b', '', text)  # Remove long patterns like xxxxxxx
+    return text
 
 # Function to validate PDF files
 def validate_pdf(file_path):
@@ -186,6 +189,8 @@ def analyze_single_vs_all(single_pdf_folder, all_pdf_folder, base_output_folder)
         return
 
     pdf_reports = {}
+    processed_count = 0
+    total_pdfs = len(all_pdf_files)
     with concurrent.futures.ProcessPoolExecutor() as executor:
         futures = {executor.submit(analyze_pdf, pdf): pdf for pdf in all_pdf_files}
         for future in concurrent.futures.as_completed(futures):
@@ -194,6 +199,8 @@ def analyze_single_vs_all(single_pdf_folder, all_pdf_folder, base_output_folder)
                 report = future.result()
                 if report:
                     pdf_reports[os.path.basename(pdf)] = report
+                processed_count += 1
+                print(f"Processed {processed_count}/{total_pdfs} PDFs...")
             except Exception as exc:
                 print(f"PDF {pdf} generated an exception: {exc}")
                 with open(os.path.join(base_output_folder, "processing_log.txt"), 'a') as log_file:
