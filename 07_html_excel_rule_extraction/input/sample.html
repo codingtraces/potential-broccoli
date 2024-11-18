@@ -1,127 +1,69 @@
-<!DOCTYPE html>
+<?xml version="1.0" encoding="iso-8859-1"?>
 <html>
 <head>
     <title>Application Report</title>
 </head>
 <body>
-
     <p align="center"><big>Application Report</big><br />
-        <strong>Batch_BrokerManagement</strong>
+        <strong><big><font color="#0000FF">Batch_BrokerManagement</font></big></strong>
     </p>
+
+    <div align="left">
+        <table border="0" cellspacing="0" width="100%" bordercolorlight="#008080">
+            <tr>
+                <td width="28%">Report Date:</td>
+                <td width="72%">2024-10-08 14:40:09</td>
+            </tr>
+        </table>
+    </div>
 
     <p align="center"><big>Application Report<br /><strong>Rules List</strong></big></p>
 
     <div align="left">
-        <a name="#Rule1" />
-        <strong>R1 <font color="#0000FF">Queue_Batch_Processing_Rule</font></strong><br /><br />
+        <a name="#Rule10335" />
+        <strong>R10335 <font color="#0000FF">Enc_PrimaryInclusion_Rule</font></strong><br /><br />
         <em>Formula:</em>
         <pre>
-        IF(ProcessStatus = "Pending") THEN
-            QueueBatch = TRUE
+        IF(LiveSubmit > TRUE) THEN
+            IND_ENCLOSURE_PRIMARYINCLUSION_FLAG=TRUE
         ENDIF
         </pre>
     </div>
 
+    <hr />
+
     <div align="left">
-        <a name="#Rule12" />
-        <strong>R12 <font color="#0000FF">Component_Rule_Setup</font></strong><br /><br />
+        <a name="#Rule9336" />
+        <strong>R9336 <font color="#0000FF">Queue Rule Archiving_Output_Queue</font></strong><br /><br />
         <em>Formula:</em>
         <pre>
-        IF(ComponentType = "Active") THEN
-            EnableComponent = TRUE
+        IF(SYS_CurrentProfile = "") THEN
+            EXCLUDE
         ENDIF
         </pre>
     </div>
 
-    <div align="left">
-        <a name="#Rule123" />
-        <strong>R123 <font color="#0000FF">Page_Load_Validation</font></strong><br /><br />
-        <em>Formula:</em>
-        <pre>
-        IF(PageLoadTime > 5) THEN
-            ShowWarning = TRUE
-        ENDIF
-        </pre>
-    </div>
-
-    <div align="left">
-        <a name="#Rule1234" />
-        <strong>R1234 <font color="#0000FF">Document_Approval_Check</font></strong><br /><br />
-        <em>Formula:</em>
-        <pre>
-        IF(DocumentStatus = "Approved") THEN
-            NotifyUser = TRUE
-        ENDIF
-        </pre>
-    </div>
-
-    <div align="left">
-        <a name="#Rule12345" />
-        <strong>R12345 <font color="#0000FF">Banner_Visibility_Rule</font></strong><br /><br />
-        <em>Formula:</em>
-        <pre>
-        IF(UserRole = "Admin") THEN
-            ShowBanner = TRUE
-        ENDIF
-        </pre>
-    </div>
-
-    <div align="left">
-        <a name="#Rule123456" />
-        <strong>R123456 <font color="#0000FF">Unknown_Rule_Name</font></strong><br /><br />
-        <em>Formula:</em>
-        <pre>
-        IF(SomethingHappens = TRUE) THEN
-            DoSomething = TRUE
-        ENDIF
-        </pre>
-    </div>
+    <hr />
 
     <p align="center"><big>Application Report<br /><strong>Function List</strong></big></p>
 
     <div align="left">
-        <a name="#Function1" />
-        <strong>F1 <font color="#0000FF">Queue_Handling_Function</font></strong><br /><br />
+        <a name="#Function124" />
+        <strong>F124 <font color="#0000FF">SuppForm_REF_PATH_Lookup_Fn</font></strong><br /><br />
         <em>Formula:</em>
         <pre>
-        IF(JobQueue > 0) THEN
-            ProcessJob = TRUE
+        dim i as integer
+
+        IF getos() = "WINDOWS" THEN
+            i = FileMap("Correspondence_SuppForm_ReferenceFile", REF_FORM_REF_LOCATION, True)
+        ELSE
+            REF_Form_Path = "/opt/exstream/app/correspondence/resources/PDF/"
+            REF_FORM_REF_LOCATION = "/opt/exstream/app/correspondence/resources/Reference_File/Correspondence_Forms_ReferenceFile.txt"
+            i = FileMap("Correspondence_SuppForm_ReferenceFile", REF_FORM_REF_LOCATION, True)
         ENDIF
         </pre>
     </div>
 
-    <div align="left">
-        <a name="#Function12" />
-        <strong>F12 <font color="#0000FF">Component_Monitoring_Function</font></strong><br /><br />
-        <em>Formula:</em>
-        <pre>
-        IF(ComponentHealth = "Fail") THEN
-            RestartComponent = TRUE
-        ENDIF
-        </pre>
-    </div>
-
-    <div align="left">
-        <a name="#Function123" />
-        <strong>F123 <font color="#0000FF">Page_Validation_Function</font></strong><br /><br />
-        <em>Formula:</em>
-        <pre>
-        IF(PageStatus = "Invalid") THEN
-            LogError = TRUE
-        ENDIF
-        </pre>
-    </div>
-
-    <div align="left">
-        <a name="#Function1234" />
-        <strong>F1234 <font color="#0000FF">Document_Creation_Function</font></strong><br /><br />
-        <em>Formula:</em>
-        <pre>
-        IF(DocumentType = "PDF") THEN
-            CreateDocument = TRUE
-        ENDIF
-        </pre>
-    </div>
-
+    <hr />
 </body>
 </html>
