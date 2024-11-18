@@ -7,6 +7,9 @@ import concurrent.futures
 import traceback
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from openpyxl import Workbook
+from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl.styles import Alignment, PatternFill
 
 # Helper function to normalize text for comparison
 def normalize_text(text):
@@ -27,36 +30,25 @@ def validate_pdf(file_path):
 # Function to analyze a single PDF structure (text)
 def analyze_pdf(file_path):
     try:
-        doc = fitz.open(file_path)
-        if doc.is_encrypted:
-            print(f"PDF {file_path} is encrypted. Skipping...")
-            return None
+        with fitz.open(file_path) as doc:
+            if doc.is_encrypted:
+                print(f"PDF {file_path} is encrypted. Skipping...")
+                return None
 
-        structure_report = {
-            "text_blocks": [],
-        }
-
-        for page_number in range(len(doc)):
-            try:
+            text_blocks = []
+            for page_number in range(len(doc)):
                 page = doc.load_page(page_number)
-            except Exception as e:
-                print(f"Error reading page {page_number + 1} of {file_path}: {e}")
-                continue
+                blocks = page.get_text("dict")["blocks"]
+                for block in blocks:
+                    if "lines" in block:
+                        block_text = "\n".join([span["text"] for line in block["lines"] for span in line["spans"]]).strip()
+                        block_text = normalize_text(block_text)
 
-            blocks = page.get_text("dict")["blocks"]
-            for block in blocks:
-                if "lines" in block:
-                    block_text = "\n".join([span["text"] for line in block["lines"] for span in line["spans"]]).strip()
-                    block_text = normalize_text(block_text)
+                        # Filter out small blocks of text less than 10 words
+                        if len(block_text.split()) >= 10:
+                            text_blocks.append(block_text)
 
-                    # Filter out small blocks of text less than 10 words
-                    if len(block_text.split()) < 10:
-                        continue
-
-                    structure_report["text_blocks"].append(block_text)
-
-        return structure_report
-
+            return {"text_blocks": text_blocks}
     except Exception as e:
         print(f"Error processing {file_path}: {e}")
         traceback.print_exc()
@@ -64,31 +56,17 @@ def analyze_pdf(file_path):
 
 # Function to compare PDFs and find common elements with similarity percentages
 def compare_pdf_structures(pdf_reports, single_pdf_report):
-    common_elements = {
-        "text_blocks": defaultdict(list),
-    }
+    common_elements = {"text_blocks": defaultdict(list)}
+    all_text_blocks = single_pdf_report["text_blocks"] + [block for report in pdf_reports.values() for block in report["text_blocks"]]
+    pdf_names = ["Single PDF"] * len(single_pdf_report["text_blocks"]) + [pdf_name for pdf_name, report in pdf_reports.items() for _ in report["text_blocks"]]
 
-    all_text_blocks = []
-    pdf_names = []
-
-    # Add single PDF text blocks
-    all_text_blocks.extend(single_pdf_report["text_blocks"])
-    pdf_names.extend(["Single PDF"] * len(single_pdf_report["text_blocks"]))
-
-    # Add all other PDFs text blocks
-    for pdf_name, report in pdf_reports.items():
-        all_text_blocks.extend(report["text_blocks"])
-        pdf_names.extend([pdf_name] * len(report["text_blocks"]))
-
-    # Calculate TF-IDF and cosine similarity
     vectorizer = TfidfVectorizer().fit_transform(all_text_blocks)
     similarity_matrix = cosine_similarity(vectorizer)
 
-    # Compare single PDF text blocks against others
     for i in range(len(single_pdf_report["text_blocks"])):
         for j in range(len(single_pdf_report["text_blocks"]), len(all_text_blocks)):
             similarity = similarity_matrix[i, j]
-            if similarity > 0.1:  # Consider matches with similarity greater than 10%
+            if similarity > 0.1:
                 common_elements["text_blocks"][single_pdf_report["text_blocks"][i]].append((pdf_names[j], round(similarity * 100, 2)))
 
     return common_elements
@@ -103,8 +81,10 @@ def generate_comparison_html_report(common_elements, output_folder):
             body {{ font-family: Arial, sans-serif; margin: 20px; }}
             h1 {{ color: #333; }}
             table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
-            th, td {{ border: 1px solid #ccc; padding: 8px; text-align: left; }}
+            th, td {{ border: 1px solid #ccc; padding: 8px; text-align: left; word-wrap: break-word; white-space: pre-wrap; }}
             th {{ background-color: #f2f2f2; }}
+            .highlight-green {{ background-color: #d4edda; }}
+            .highlight-yellow {{ background-color: #fff3cd; }}
         </style>
     </head>
     <body>
@@ -125,8 +105,9 @@ def generate_comparison_html_report(common_elements, output_folder):
     for item, matches in common_elements["text_blocks"].items():
         for match in matches:
             pdf_name, similarity = match
+            highlight_class = "highlight-green" if similarity == 100 else "highlight-yellow"
             html_content += f"""
-            <tr>
+            <tr class="{highlight_class}">
                 <td>Text Block</td>
                 <td>{item}</td>
                 <td>{pdf_name}</td>
@@ -147,25 +128,40 @@ def generate_comparison_html_report(common_elements, output_folder):
 
     print(f"Template reusability report generated: {html_filename}")
 
-# Function to generate Excel report
+# Function to generate Excel report with wrapped text and highlighting
 def generate_comparison_excel_report(common_elements, output_folder):
     rows = []
     for item, matches in common_elements["text_blocks"].items():
         for match in matches:
             pdf_name, similarity = match
-            rows.append(["Text Block", item, pdf_name, f"{similarity}%"])
+            rows.append(["Text Block", item, pdf_name, similarity])
 
     df = pd.DataFrame(rows, columns=["Type", "Content (Paragraph)", "Found in PDF", "Similarity Percentage"])
 
-    # Include current time in filename
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Template Reusability Report"
+
+    for r_idx, row in enumerate(dataframe_to_rows(df, index=False, header=True), 1):
+        for c_idx, value in enumerate(row, 1):
+            cell = ws.cell(row=r_idx, column=c_idx, value=value)
+            cell.alignment = Alignment(wrap_text=True, vertical='top')
+
+            if r_idx > 1:
+                if c_idx == 4:
+                    similarity = float(value)
+                    fill = PatternFill(start_color="D4EDDA", end_color="D4EDDA", fill_type="solid") if similarity == 100 else PatternFill(start_color="FFF3CD", end_color="FFF3CD", fill_type="solid")
+                    ws.cell(row=r_idx, column=2).fill = fill
+                    ws.cell(row=r_idx, column=4).fill = fill
+
     current_time = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
     excel_filename = os.path.join(output_folder, f"template_reusability_report_{current_time}.xlsx")
-    df.to_excel(excel_filename, index=False)
+    wb.save(excel_filename)
 
     print(f"Excel report generated: {excel_filename}")
 
-# Function to handle the main comparison between single PDF and multiple PDFs with parallel processing
-def analyze_single_vs_all(single_pdf_folder, all_pdf_folder, output_folder):
+# Main function to process the PDF analysis and comparison
+def analyze_single_vs_all(single_pdf_folder, all_pdf_folder, base_output_folder):
     single_pdf_files = [f for f in os.listdir(single_pdf_folder) if f.lower().endswith('.pdf')]
     if not single_pdf_files:
         print("No valid PDF files found in the singlepdf folder.")
@@ -185,7 +181,6 @@ def analyze_single_vs_all(single_pdf_folder, all_pdf_folder, output_folder):
 
     print(f"Analyzing single PDF: {single_pdf}")
     single_pdf_report = analyze_pdf(single_pdf)
-
     if single_pdf_report is None:
         print("Failed to process the single PDF.")
         return
@@ -198,27 +193,28 @@ def analyze_single_vs_all(single_pdf_folder, all_pdf_folder, output_folder):
             try:
                 report = future.result()
                 if report:
-                    pdf_name = os.path.basename(pdf)
-                    pdf_reports[pdf_name] = report
+                    pdf_reports[os.path.basename(pdf)] = report
             except Exception as exc:
                 print(f"PDF {pdf} generated an exception: {exc}")
-                with open(os.path.join(output_folder, "processing_log.txt"), 'a') as log_file:
+                with open(os.path.join(base_output_folder, "processing_log.txt"), 'a') as log_file:
                     log_file.write(f"{pdf} failed with error: {exc}\n")
 
-    # Compare and generate reports
+    current_time = datetime.now().strftime('%Y_%m_%d_%H_%M_%S')
+    output_folder = os.path.join(base_output_folder, f"pdf_rationalization_report_{current_time}")
+    os.makedirs(output_folder, exist_ok=True)
+
     common_elements = compare_pdf_structures(pdf_reports, single_pdf_report)
     generate_comparison_html_report(common_elements, output_folder)
     generate_comparison_excel_report(common_elements, output_folder)
 
-# Main execution
 if __name__ == "__main__":
     base_dir = os.path.dirname(os.path.abspath(__file__))
     single_pdf_folder = os.path.join(base_dir, 'singlepdf')
     all_pdf_folder = os.path.join(base_dir, 'allpdf')
-    output_folder = os.path.join(base_dir, 'result')
+    base_output_folder = os.path.join(base_dir, 'result')
 
-    os.makedirs(output_folder, exist_ok=True)
+    os.makedirs(base_output_folder, exist_ok=True)
 
     print("Starting analysis...")
-    analyze_single_vs_all(single_pdf_folder, all_pdf_folder, output_folder)
+    analyze_single_vs_all(single_pdf_folder, all_pdf_folder, base_output_folder)
     print("Analysis complete.")
